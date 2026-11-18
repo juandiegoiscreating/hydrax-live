@@ -1,0 +1,407 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HYDRAX | Bet Tracker</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#07100c;--panel:#101d16;
+  --line:#294535;--green:#83f5a8;
+  --text:#f2fff5;--muted:#9db5a5;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);
+  color:var(--text);
+  font:15px system-ui,-apple-system,sans-serif
+}
+main{max-width:760px;margin:auto;padding:20px}
+header{padding:22px 0;border-bottom:1px solid var(--line)}
+h1{margin:0;font-size:30px;letter-spacing:2px}
+h2{font-size:18px;margin:0 0 16px}
+small,.muted{color:var(--muted)}
+.accent{color:var(--green)}
+.card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  padding:18px;border-radius:16px;
+  margin:18px 0
+}
+label{display:block;margin:12px 0 5px;color:var(--muted)}
+input,select,button{
+  width:100%;padding:13px;border-radius:9px;
+  font:inherit
+}
+input,select{
+  background:#08130d;border:1px solid #365340;
+  color:white
+}
+button{
+  background:var(--green);color:#06130a;
+  font-weight:750;border:0;cursor:pointer;
+  margin-top:10px
+}
+button:disabled{opacity:.45;cursor:wait}
+.secondary{
+  background:#234330;color:white
+}
+.danger{background:#512626;color:white}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.metric{padding:14px;background:#08130d;border-radius:10px}
+.metric strong{display:block;font-size:23px;margin-top:5px}
+.bet{padding:14px 0;border-bottom:1px solid var(--line)}
+.bet:last-child{border-bottom:0}
+.bet strong{display:block}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.row button{width:auto;padding:8px}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.actions button{width:auto;font-size:12px}
+.hidden{display:none}
+#message{padding:10px;color:var(--green);white-space:pre-wrap}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <small class="accent">SPORTS INTELLIGENCE TERMINAL</small>
+  <h1>HYDRAX <span class="accent">REBIRTH</span></h1>
+  <small>BET TRACKER · TEST BUILD</small>
+</header>
+
+<p id="message"></p>
+
+<section id="setup" class="card">
+<h2>Configuración inicial</h2>
+<p class="muted">
+Introduce la URL y la clave pública de Supabase.
+Nunca uses service_role ni secret keys.
+</p>
+<label>Supabase Project URL</label>
+<input id="projectUrl" placeholder="https://xxxxx.supabase.co">
+<label>Publishable / anon key</label>
+<input id="publicKey" placeholder="sb_publishable_... o clave anon">
+<button id="saveConfig">Guardar configuración</button>
+</section>
+
+<section id="auth" class="card hidden">
+<h2>Acceso privado</h2>
+<label>Email</label>
+<input id="email" type="email" autocomplete="username">
+<label>Contraseña</label>
+<input id="password" type="password" autocomplete="current-password">
+<button id="login">Entrar</button>
+<button id="signup" class="secondary">Crear cuenta</button>
+</section>
+
+<section id="app" class="hidden">
+<div class="row">
+  <small id="account"></small>
+  <button id="logout" class="secondary">Salir</button>
+</div>
+
+<section class="card">
+<h2>Performance</h2>
+<label>Deporte para estadísticas</label>
+<select id="filter">
+<option value="">Todos los deportes</option>
+<option>UFC</option><option>ATP</option>
+<option>WTA</option><option>NBA</option>
+<option>NFL</option><option>MLB</option>
+<option>NCAAB</option><option>NCAAF</option>
+</select>
+<div class="stats" style="margin-top:14px">
+  <div class="metric"><small>Ganadas</small><strong id="won">0</strong></div>
+  <div class="metric"><small>Perdidas</small><strong id="lost">0</strong></div>
+  <div class="metric"><small>Profit neto</small><strong id="profit">$0.00</strong></div>
+  <div class="metric"><small>Yield / ROI sobre stake liquidado</small><strong id="yield">—</strong></div>
+  <div class="metric"><small>Win rate</small><strong id="winrate">—</strong></div>
+  <div class="metric"><small>Pendientes</small><strong id="pending">0</strong></div>
+</div>
+</section>
+
+<section class="card">
+<h2>Registrar apuesta</h2>
+<label>Deporte</label>
+<select id="sport">
+<option>UFC</option><option>ATP</option>
+<option>WTA</option><option>NBA</option>
+<option>NFL</option><option>MLB</option>
+<option>NCAAB</option><option>NCAAF</option>
+</select>
+<label>Evento</label>
+<input id="eventName" placeholder="Ej. Peleador A vs Peleador B">
+<label>Selección</label>
+<input id="selection" placeholder="Ej. Peleador A Moneyline">
+<div class="grid">
+<div>
+<label>Tipo</label>
+<select id="betType">
+<option value="single">Individual</option>
+<option value="parlay">Parlay</option>
+</select>
+</div>
+<div>
+<label>Sportsbook</label>
+<select id="sportsbook">
+<option>Caesars</option><option>Otro</option>
+</select>
+</div>
+</div>
+<div class="grid">
+<div>
+<label>Stake ($)</label>
+<input id="stake" type="number" value="25" min=".01" step=".01">
+</div>
+<div>
+<label>Cuota americana</label>
+<input id="odds" type="number" value="-110" step="1">
+</div>
+</div>
+<p class="muted">Ganancia potencial neta:
+<strong class="accent" id="potential">$22.73</strong></p>
+<button id="register">REGISTRAR APUESTA</button>
+</section>
+
+<section class="card">
+<h2>Historial</h2>
+<div id="bets">Sin apuestas registradas.</div>
+<button id="more" class="secondary hidden">Cargar más</button>
+</section>
+</section>
+</main>
+
+<script type="module">
+import {createClient} from
+"https://esm.sh/@supabase/supabase-js@2";
+
+const $=id=>document.getElementById(id);
+let sb=null;
+let offset=0;
+const pageSize=30;
+const money=n=>"$"+Number(n||0).toFixed(2);
+
+function show(id,visible){
+  $(id).classList.toggle("hidden",!visible);
+}
+function msg(text){
+  $("message").textContent=text;
+}
+function oddsValid(n){
+  return Number.isInteger(n)&&(n<=-100||n>=100)
+    &&Math.abs(n)<=100000;
+}
+function potential(){
+  const s=Number($("stake").value);
+  const o=Number($("odds").value);
+  const p=s>0&&oddsValid(o)
+    ?s*(o>0?o/100:100/Math.abs(o)):0;
+  $("potential").textContent=money(p);
+}
+$("stake").oninput=potential;
+$("odds").oninput=potential;
+
+async function initialize(){
+  const url=localStorage.getItem("hydrax_url");
+  const key=localStorage.getItem("hydrax_key");
+  if(!url||!key){
+    show("setup",true);
+    return;
+  }
+  try{
+    sb=createClient(url,key);
+    show("setup",false);
+    const {data,error}=await sb.auth.getSession();
+    if(error)throw error;
+    await renderSession(data.session);
+  }catch(e){
+    show("setup",true);
+    msg("Configuración: "+e.message);
+  }
+}
+
+async function renderSession(session){
+  show("auth",!session);
+  show("app",!!session);
+  if(session){
+    $("account").textContent=session.user.email||"Usuario";
+    await refresh();
+  }
+}
+
+$("saveConfig").onclick=()=>{
+  const url=$("projectUrl").value.trim().replace(/\/+$/,"");
+  const key=$("publicKey").value.trim();
+  if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(url)||!key){
+    return msg("Introduce URL y clave pública válidas.");
+  }
+  localStorage.setItem("hydrax_url",url);
+  localStorage.setItem("hydrax_key",key);
+  location.reload();
+};
+
+$("login").onclick=async()=>{
+  const {data,error}=await sb.auth.signInWithPassword({
+    email:$("email").value.trim(),
+    password:$("password").value
+  });
+  if(error)return msg(error.message);
+  msg("Sesión iniciada.");
+  await renderSession(data.session);
+};
+
+$("signup").onclick=async()=>{
+  const {data,error}=await sb.auth.signUp({
+    email:$("email").value.trim(),
+    password:$("password").value
+  });
+  if(error)return msg(error.message);
+  msg(data.session
+    ?"Cuenta creada."
+    :"Revisa tu email para confirmar la cuenta.");
+  if(data.session)await renderSession(data.session);
+};
+
+$("logout").onclick=async()=>{
+  await sb.auth.signOut();
+  await renderSession(null);
+  msg("Sesión cerrada.");
+};
+
+async function invoke(body){
+  const {data,error}=await sb.functions.invoke(
+    "hydrax-bet-tracker",{body}
+  );
+  if(error){
+    let detail=error.message;
+    if(error.context instanceof Response){
+      try{
+        const j=await error.context.json();
+        detail=j.error||detail;
+      }catch{}
+    }
+    throw Error(detail);
+  }
+  return data;
+}
+
+$("register").onclick=async()=>{
+  const button=$("register");
+  const stake=Number($("stake").value);
+  const american_odds=Number($("odds").value);
+  if(!Number.isFinite(stake)||stake<=0||
+     !oddsValid(american_odds)){
+    return msg("Revisa stake y cuota.");
+  }
+  const payload={
+    action:"create",
+    sport:$("sport").value,
+    event_name:$("eventName").value.trim(),
+    selection:$("selection").value.trim(),
+    market:"custom",
+    sportsbook:$("sportsbook").value,
+    bet_type:$("betType").value,
+    stake,american_odds
+  };
+  if(!payload.event_name||!payload.selection){
+    return msg("Introduce evento y selección.");
+  }
+  button.disabled=true;
+  try{
+    await invoke(payload);
+    $("eventName").value="";
+    $("selection").value="";
+    msg("Apuesta registrada correctamente.");
+    await refresh();
+  }catch(e){msg("Error: "+e.message)}
+  finally{button.disabled=false}
+};
+
+async function refresh(){
+  offset=0;
+  await Promise.all([loadSummary(),loadBets(true)]);
+}
+
+async function loadSummary(){
+  try{
+    const data=await invoke({
+      action:"summary",
+      sport:$("filter").value||null
+    });
+    const s=data.summary||{};
+    $("won").textContent=s.won||0;
+    $("lost").textContent=s.lost||0;
+    $("pending").textContent=s.pending||0;
+    $("profit").textContent=money(s.net_profit);
+    $("yield").textContent=s.yield_pct==null
+      ?"—":s.yield_pct+"%";
+    $("winrate").textContent=s.win_rate_pct==null
+      ?"—":s.win_rate_pct+"%";
+  }catch(e){msg("Error de estadísticas: "+e.message)}
+}
+
+function make(tag,text){
+  const el=document.createElement(tag);
+  el.textContent=text;
+  return el;
+}
+
+async function loadBets(reset=false){
+  try{
+    const data=await invoke({
+      action:"list",
+      sport:$("filter").value||null,
+      limit:pageSize,offset
+    });
+    const list=data.bets||[];
+    if(reset)$("bets").replaceChildren();
+    if(reset&&!list.length){
+      $("bets").textContent="No hay apuestas en esta categoría.";
+    }
+    for(const bet of list){
+      const item=make("div","");
+      item.className="bet";
+      item.append(
+        make("strong",bet.selection),
+        make("small",`${bet.sport} | ${bet.event_name}`),
+        make("p",`${money(bet.stake)} | ${bet.american_odds>0?"+":""}${bet.american_odds} | ${bet.status}`),
+        make("small","Profit: "+money(bet.net_profit))
+      );
+      const actions=make("div","");
+      actions.className="actions";
+      if(bet.status==="pending"){
+        for(const status of ["won","lost","void"]){
+          const button=make("button",
+            status==="won"?"Ganada":
+            status==="lost"?"Perdida":"Void");
+          button.className="secondary";
+          button.onclick=()=>settle(bet.id,status);
+          actions.append(button);
+        }
+      }
+      item.append(actions);
+      $("bets").append(item);
+    }
+    offset+=list.length;
+    show("more",list.length===pageSize);
+  }catch(e){msg("Error de historial: "+e.message)}
+}
+
+async function settle(id,status){
+  if(!confirm("Confirmar resultado: "+status+"?"))return;
+  try{
+    await invoke({action:"settle",id,status});
+    msg("Resultado actualizado.");
+    await refresh();
+  }catch(e){msg("Error: "+e.message)}
+}
+
+$("filter").onchange=refresh;
+$("more").onclick=()=>loadBets(false);
+initialize();
+</script>
+</body>
+</html>
