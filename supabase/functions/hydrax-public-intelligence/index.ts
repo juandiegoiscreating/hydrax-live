@@ -32,15 +32,15 @@ function analyze(events:any[],sport:string){
   for(const target of books){
    const names=Object.keys(target.prices).sort();
    const peers=books.filter((b:any)=>b!==target&&JSON.stringify(Object.keys(b.prices).sort())===JSON.stringify(names));
-   if(peers.length<2)continue;
+   if(peers.length<3)continue;
    for(const name of names){
     const vals=peers.map((b:any)=>b.prices[name].p).sort((a:number,b:number)=>a-b);
     const p=vals.length%2?vals[(vals.length-1)/2]:(vals[vals.length/2-1]+vals[vals.length/2])/2;
     const odds=target.prices[name].odds;
     const ev=(p*decimal(odds)-1)*100;
-    if(!Number.isFinite(ev)||ev<=0)continue;
+    if(!Number.isFinite(ev)||ev<2||ev>30||odds>500||odds<-350)continue;
     const spread=Math.max(...vals)-Math.min(...vals);
-    result.push({sport,event:[e.away_team,e.home_team].filter(Boolean).join(" vs "),selection:name,bookmaker:target.book,odds,probabilityPercent:rnd(100*p),simulatedPercent:rnd(mc(p)*100),evPercent:rnd(ev),risk:spread>.08?"ALTO":spread>.04?"MEDIO":"DISPERSIÓN BAJA",startsAt:e.commence_time});
+    result.push({sport,event:[e.away_team,e.home_team].filter(Boolean).join(" vs "),selection:name,bookmaker:target.book,odds,probabilityPercent:rnd(100*p),simulatedPercent:rnd(mc(p)*100),evPercent:rnd(ev),risk:spread>.08?"DISPERSION ALTA":spread>.04?"DISPERSION MEDIA":"DISPERSION BAJA",lossProbabilityPercent:rnd((1-p)*100),peerBookmakerCount:peers.length,startsAt:e.commence_time});
    }
   }
  }
@@ -297,7 +297,7 @@ function modelAudit(){
 const SR=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
 const TABLE=PROJECT+"/rest/v1/hydrax_market_cache";
 const TTL_MS=2*60*60*1000;
-const MODEL_CACHE_VERSION=8;
+const MODEL_CACHE_VERSION=9;
 const LIMIT_PER_SPORT_DAY=4;
 const cors={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"content-type","Access-Control-Allow-Methods":"GET,POST,OPTIONS","Cache-Control":"no-store"};
 const output=(body:unknown,status=200)=>Response.json(body,{status,headers:cors});
@@ -359,7 +359,7 @@ async function generate(sport:string){
  return {ok:true,sport,eventsCount:today.length,providerEventsCount:events.length,events:explained,eventsTruncated:today.length>5,
   picks:valued.map((x:any)=>({...x,decision:"NO_BET",validatedValue:false})),
   predictionType:"SPORT_SPECIFIC_RESEARCH_ONLY",modelVersion:MODEL_VERSION,modelCacheVersion:MODEL_CACHE_VERSION,monteCarloIterations:10000,
-  modelValidation:modelAudit(),playerAvailability:availability,sourceQuality:{market:"THE_ODDS_API",statistics:(sport==="ATP"||sport==="WTA")?"TENNIS_2026_CSV_RESEARCH":sport==="UFC"?"ESPN_UFC_FIGHT_CARDS":ESPN[sport]?"ESPN_UNOFFICIAL_JSON":"NOT_CONFIGURED",
+  candidateCriteria:{minConsensusEVPercent:2,maxConsensusEVPercent:30,maxAmericanOdds:500,minAmericanOdds:-350,minComparablePeers:3,validated:false,allDecisions:"NO_BET"},modelValidation:modelAudit(),playerAvailability:availability,sourceQuality:{market:"THE_ODDS_API",statistics:(sport==="ATP"||sport==="WTA")?"TENNIS_2026_CSV_RESEARCH":sport==="UFC"?"ESPN_UFC_FIGHT_CARDS":ESPN[sport]?"ESPN_UNOFFICIAL_JSON":"NOT_CONFIGURED",
    dataTimestamp:new Date().toISOString(),sportsbooksQueried:today.reduce((n:number,e:any)=>n+(Array.isArray(e.bookmakers)?e.bookmakers.length:0),0),oddsFreshnessPolicyMinutes:30},
   retrievedAt:new Date().toISOString(),message:today.length?"Se analizaron encuentros. Todos siguen NO BET hasta validar el modelo.":"No hay eventos futuros hoy, hora de Puerto Rico.",
   warning:failures.join("; ")||"Predicciones experimentales; sin verificación de lesiones y alineaciones, ni resultados históricos suficientes para calibración."};
