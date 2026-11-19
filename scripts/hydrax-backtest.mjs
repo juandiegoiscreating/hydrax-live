@@ -34,7 +34,7 @@ const responses=await pool(days,4,load);
 const games=[...new Map(responses.flatMap(x=>x.games).map(x=>[x.id,x])).values()].sort((a,b)=>a.date-b.date);
 const errors=responses.filter(x=>x.error).map(x=>({day:x.day,error:x.error}));
 const params={MLB:{sd:4,hfa:0.25},NBA:{sd:16,hfa:2},NCAAB:{sd:16,hfa:2},NFL:{sd:15,hfa:1.5},NCAAF:{sd:15,hfa:1.5}}[SPORT];
-function erf(x){const sign=Math.sign(x),v=Math.abs(x),t=1/(1+0.3275911*v),p=1-((((((1.061405429*t)-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-v*v));return sign*p}
+function erf(x){const sign=x<0?-1:1,v=Math.abs(x),t=1/(1+0.3275911*v);const poly=(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t;return sign*(1-poly*Math.exp(-v*v))}
 const normalCDF=x=>Math.max(.001,Math.min(.999,.5*(1+erf(x/Math.SQRT2))));
 const form=(home,away)=>{
  const h=home.reduce((v,x)=>v+x,0)/home.length,a=away.reduce((v,x)=>v+x,0)/away.length;
