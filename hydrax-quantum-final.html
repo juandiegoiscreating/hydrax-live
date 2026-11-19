@@ -83,7 +83,7 @@ const sports=[["UFC","🥊"],["ATP","🎾"],["WTA","🎾"],["NBA","🏀"],["NFL"
 let current="UFC", token=0;
 const $=id=>document.getElementById(id);
 const fmtPct=v=>typeof v==='number' && isFinite(v)? `${v.toFixed(2)}%` : '—';
-const displayModel=v=>prettyStatus(v)+' · TOP PLAYS';
+const displayModel=v=>'HYDRAX TOP PLAYS · EXPERIMENTAL';
 const prettyStatus=s=>({
   DATA_UNAVAILABLE:'Estadísticas no disponibles',RESEARCH_ESTIMATE:'Estimación experimental',
   NO_INDEPENDENT_DATA:'Sin datos independientes',INSUFFICIENT_HISTORY:'Historial insuficiente',
@@ -171,9 +171,10 @@ async function run(){
        results.append(panel);
     }
     if(!data.picks || !data.picks.length){
-      results.append(el('p','warn',data.message || 'NO BET: sin candidatos que cumplan los filtros.'));
+      results.append(el('p','warn',data.message || 'No hay cuotas compatibles para generar opciones en este deporte.'));
     } else {
-      results.append(el('h2','', 'DIFERENCIAS DE MERCADO · NO BET'));
+      results.append(el('h2','', 'TOP PLAYS · SELECCIONES CLASIFICADAS'));
+      results.append(el('p','status','Ordenadas por precio, probabilidad implícita y ganancia posible. El ranking todavía no está validado.'));
       data.picks.forEach(p=>results.append(pickCard(p)));
     }
     if(Array.isArray(data.events) && data.events.length){
