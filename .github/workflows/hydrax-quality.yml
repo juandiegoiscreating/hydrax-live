@@ -1,0 +1,40 @@
+name: HYDRAX quality smoke
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/hydrax-quality.yml"
+      - "scripts/hydrax-backtest.mjs"
+      - "hydrax-quantum-final.html"
+permissions:
+  contents: read
+jobs:
+  frontend-and-api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check frontend JavaScript syntax
+        run: |
+          node - <<'JS'
+          const fs=require("fs");
+          const html=fs.readFileSync("hydrax-quantum-final.html","utf8");
+          const js=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+          if(!js)throw Error("Missing frontend JS");
+          new Function(js);
+          console.log("FRONTEND_SYNTAX_OK");
+          JS
+      - name: Check model backtest script syntax
+        run: node --check scripts/hydrax-backtest.mjs
+      - name: Probe HYDRAX API read-only status
+        run: |
+          node --input-type=module - <<'JS'
+          const r=await fetch("https://acpwxupqpbyesbhuixkq.supabase.co/functions/v1/hydrax-public-intelligence",{signal:AbortSignal.timeout(15000)});
+          if(!r.ok)throw Error("HYDRAX API status "+r.status);
+          const j=await r.json();
+          if(j.service!=="HYDRAX_PUBLIC_INTELLIGENCE" || j.authRequired!==false)throw Error("Unexpected API health shape");
+          console.log({service:j.service,modelVersion:j.modelVersion,modelAudit:j.modelAudit?.status});
+          JS
