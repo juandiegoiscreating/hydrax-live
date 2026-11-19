@@ -1,0 +1,669 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#050b09">
+<title>HYDRAX QUANTUM | Intelligence</title>
+
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #050b09;
+  --panel: #101b15;
+  --green: #80f4a4;
+  --line: #284736;
+  --muted: #9bb4a4;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: #f1fff5;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+main {
+  max-width: 900px;
+  margin: auto;
+  padding: 18px;
+}
+
+header {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+h1 {
+  font-size: 30px;
+  letter-spacing: 2px;
+  margin: 4px 0;
+}
+
+h2 { font-size: 19px; }
+
+small, .muted { color: var(--muted); }
+.green { color: var(--green); }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  padding: 16px;
+  margin: 15px 0;
+}
+
+.sports {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+button {
+  padding: 13px 8px;
+  border: 1px solid var(--line);
+  background: #18271d;
+  color: white;
+  border-radius: 10px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sports button { font-size: 13px; }
+
+.sports button.active {
+  background: var(--green);
+  color: #05130a;
+  font-weight: 800;
+}
+
+.primary {
+  background: var(--green);
+  color: #06160b;
+  font-weight: 800;
+  width: 100%;
+  padding: 18px;
+  margin-top: 15px;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.metric {
+  background: #08140e;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.metric b {
+  display: block;
+  margin-top: 6px;
+  font-size: 19px;
+}
+
+.card {
+  background: #0b1710;
+  border: 1px solid #335341;
+  padding: 14px;
+  border-radius: 11px;
+  margin: 10px 0;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.tag {
+  color: var(--green);
+  font-size: 12px;
+}
+
+.warning { color: #ffd38b; }
+.error { color: #ff9292; }
+
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  color: #b7d9c0;
+}
+
+details { margin-top: 12px; }
+
+a { color: var(--green); }
+
+@media(max-width: 400px) {
+  .sports {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+</style>
+</head>
+
+<body>
+<main>
+
+<header>
+  <small class="green">
+    SPORTS INTELLIGENCE TERMINAL
+  </small>
+
+  <h1>
+    HYDRAX <span class="green">QUANTUM</span>
+  </h1>
+
+  <small>
+    RESEARCH · PREDICTION · VALUE · RISK
+  </small>
+</header>
+
+<section class="panel">
+  <h2>Divisiones deportivas</h2>
+  <div class="sports" id="sports"></div>
+</section>
+
+<section class="panel">
+
+  <div class="row">
+    <h2 id="sportTitle">UFC Intelligence</h2>
+    <span class="tag">LIVE REQUEST</span>
+  </div>
+
+  <div class="metrics">
+
+    <div class="metric">
+      <small>Bets</small>
+      <b id="bets">—</b>
+    </div>
+
+    <div class="metric">
+      <small>Profit</small>
+      <b id="profit">—</b>
+    </div>
+
+    <div class="metric">
+      <small>Win rate</small>
+      <b id="winrate">—</b>
+    </div>
+
+  </div>
+
+  <p class="muted">
+    Estadísticas obtenidas del HYDRAX Bet Tracker.
+  </p>
+
+  <button class="primary" id="analyze">
+    GENERATE TODAY'S BEST BETS
+  </button>
+
+  <p id="status" class="muted">
+    Selecciona un deporte para comenzar.
+  </p>
+
+</section>
+
+<section class="panel">
+
+  <h2>QUANTUM ANALYSIS</h2>
+
+  <div id="results">
+    <p class="muted">
+      Esperando análisis deportivo.
+    </p>
+  </div>
+
+</section>
+
+<section class="panel">
+  <a href="./tracker.html">
+    Abrir HYDRAX Bet Tracker
+  </a>
+</section>
+
+</main>
+
+<script type="module">
+
+import { createClient } from
+"https://esm.sh/@supabase/supabase-js@2";
+
+const $ = id => document.getElementById(id);
+
+const SPORTS = [
+  ["UFC", "🥊"],
+  ["ATP", "🎾"],
+  ["WTA", "🎾"],
+  ["NBA", "🏀"],
+  ["NFL", "🏈"],
+  ["MLB", "⚾"],
+  ["NCAAB", "🏀"],
+  ["NCAAF", "🏈"]
+];
+
+let selected = "UFC";
+let sb = null;
+
+const url = localStorage.getItem("hydrax_url");
+const key = localStorage.getItem("hydrax_key");
+
+if (url && key) {
+  try {
+    sb = createClient(url, key);
+  } catch (e) {
+    $("status").textContent =
+      "Error configurando Supabase: " + e.message;
+  }
+} else {
+  $("status").textContent =
+    "Configura Supabase desde tracker.html primero.";
+}
+
+function text(el, value) {
+  el.textContent = String(value ?? "—");
+}
+
+function element(tag, content, cls = "") {
+  const el = document.createElement(tag);
+  el.className = cls;
+  el.textContent = String(content ?? "");
+  return el;
+}
+
+function renderSports() {
+  $("sports").replaceChildren();
+
+  for (const [name, emoji] of SPORTS) {
+
+    const btn = element(
+      "button",
+      emoji + " " + name
+    );
+
+    if (name === selected) {
+      btn.classList.add("active");
+    }
+
+    btn.onclick = () => {
+      selected = name;
+
+      $("sportTitle").textContent =
+        name + " Intelligence";
+
+      $("results").replaceChildren(
+        element(
+          "p",
+          "Esperando análisis.",
+          "muted"
+        )
+      );
+
+      renderSports();
+      loadTracking();
+    };
+
+    $("sports").append(btn);
+  }
+}
+
+async function invoke(name, body) {
+
+  const { data, error } =
+    await sb.functions.invoke(name, { body });
+
+  if (error) {
+    let reason = error.message;
+
+    if (error.context instanceof Response) {
+      try {
+        const obj = await error.context.json();
+        reason =
+          obj.error ||
+          obj.message ||
+          reason;
+      } catch {}
+    }
+
+    throw new Error(reason);
+  }
+
+  return data;
+}
+
+async function loadTracking() {
+
+  text($("bets"), "—");
+  text($("profit"), "—");
+  text($("winrate"), "—");
+
+  if (!sb) return;
+
+  try {
+
+    const { data, error } =
+      await sb.auth.getSession();
+
+    if (error || !data.session) {
+      $("status").textContent =
+        "Inicia sesión en el Tracker primero.";
+      return;
+    }
+
+    const response = await invoke(
+      "hydrax-bet-tracker",
+      {
+        action: "summary",
+        sport: selected
+      }
+    );
+
+    const s = response.summary || {};
+
+    text($("bets"), s.bets ?? 0);
+
+    text(
+      $("profit"),
+      "$" + Number(s.net_profit || 0).toFixed(2)
+    );
+
+    text(
+      $("winrate"),
+      s.win_rate_pct == null
+        ? "—"
+        : s.win_rate_pct + "%"
+    );
+
+  } catch (e) {
+    $("status").textContent =
+      "Tracking: " + e.message;
+  }
+}
+
+function showResponse(name, data) {
+
+  const card = element("div", "", "card");
+  card.append(element("h3", name));
+
+  if (data == null) {
+
+    card.append(
+      element(
+        "p",
+        "No se recibieron datos.",
+        "warning"
+      )
+    );
+
+    $("results").append(card);
+    return;
+  }
+
+  const objects =
+    Array.isArray(data) ? data :
+    Array.isArray(data.picks) ? data.picks :
+    Array.isArray(data.bets) ? data.bets :
+    Array.isArray(data.recommendations)
+      ? data.recommendations :
+    Array.isArray(data.results)
+      ? data.results : [];
+
+  if (objects.length) {
+
+    for (const item of objects.slice(0, 15)) {
+
+      const box = element("div", "", "card");
+
+      const nameText =
+        item.event ||
+        item.match ||
+        item.fight ||
+        item.selection ||
+        item.pick ||
+        item.name ||
+        "Resultado";
+
+      box.append(element("b", nameText));
+
+      const parts = [
+        [
+          "Selección",
+          item.selection ?? item.pick
+        ],
+        [
+          "Probabilidad",
+          item.probability ??
+          item.win_probability
+        ],
+        [
+          "Cuota",
+          item.odds ??
+          item.american_odds
+        ],
+        [
+          "EV",
+          item.ev ??
+          item.expected_value
+        ],
+        [
+          "Riesgo",
+          item.risk ??
+          item.risk_level
+        ]
+      ];
+
+      for (const [label, value] of parts) {
+
+        if (
+          value !== undefined &&
+          value !== null
+        ) {
+          box.append(
+            element(
+              "p",
+              label + ": " + value
+            )
+          );
+        }
+      }
+
+      const detail =
+        document.createElement("details");
+
+      detail.append(
+        element("summary", "Ver datos completos")
+      );
+
+      detail.append(
+        element(
+          "pre",
+          JSON.stringify(item, null, 2)
+        )
+      );
+
+      box.append(detail);
+      card.append(box);
+    }
+
+  } else {
+
+    card.append(
+      element(
+        "p",
+        "Respuesta recibida. Revisa los datos completos.",
+        "muted"
+      )
+    );
+
+  }
+
+  const detail =
+    document.createElement("details");
+
+  detail.append(
+    element(
+      "summary",
+      "Respuesta original del motor"
+    )
+  );
+
+  detail.append(
+    element(
+      "pre",
+      JSON.stringify(data, null, 2)
+    )
+  );
+
+  card.append(detail);
+  $("results").append(card);
+}
+
+$("analyze").onclick = async () => {
+
+  if (!sb) {
+    $("status").textContent =
+      "Configura Supabase desde tracker.html.";
+    return;
+  }
+
+  const button = $("analyze");
+
+  button.disabled = true;
+  $("results").replaceChildren();
+
+  const today = new Intl.DateTimeFormat(
+    "en-CA",
+    {
+      timeZone: "America/Puerto_Rico",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }
+  ).format(new Date());
+
+  const requests = [
+    {
+      name: "DAILY RADAR",
+      fn: "hydrax-dashboard-feed",
+      body: {
+        mode: "radar",
+        sport: selected,
+        date: today
+      }
+    },
+    {
+      name: "QUANTUM MODEL",
+      fn: "hydrax-quantum-model",
+      body: {
+        sport: selected,
+        date: today
+      }
+    },
+    {
+      name: "VALUE ENGINE",
+      fn: "hydrax-value-engine",
+      body: {
+        sport: selected,
+        date: today
+      }
+    },
+    {
+      name: "LIVE ODDS",
+      fn: "hydrax-live-odds",
+      body: {
+        sport: selected,
+        date: today
+      }
+    }
+  ];
+
+  let successful = 0;
+
+  $("status").textContent =
+    "Consultando " + selected +
+    " · " + today;
+
+  try {
+
+    const { data } =
+      await sb.auth.getSession();
+
+    if (!data.session) {
+      $("status").textContent =
+        "Inicia sesión en HYDRAX Tracker primero.";
+      return;
+    }
+
+    for (const r of requests) {
+
+      try {
+
+        const result = await invoke(
+          r.fn,
+          r.body
+        );
+
+        showResponse(r.name, result);
+
+        successful++;
+
+      } catch (e) {
+
+        const card =
+          element("div", "", "card");
+
+        card.append(
+          element("b", r.name)
+        );
+
+        card.append(
+          element(
+            "p",
+            "No disponible: " + e.message,
+            "warning"
+          )
+        );
+
+        $("results").append(card);
+      }
+    }
+
+    $("status").textContent =
+      successful +
+      " de " +
+      requests.length +
+      " fuentes respondieron. " +
+      "Verifica fechas, estadísticas, cuotas " +
+      "y metodología antes de utilizar " +
+      "cualquier predicción.";
+
+  } catch (e) {
+
+    $("status").textContent =
+      "Error: " + e.message;
+
+  } finally {
+
+    button.disabled = false;
+
+  }
+};
+
+renderSports();
+loadTracking();
+
+</script>
+</body>
+</html>
