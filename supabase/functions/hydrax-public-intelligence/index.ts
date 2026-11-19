@@ -324,7 +324,7 @@ function modelAudit(){
 const SR=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
 const TABLE=PROJECT+"/rest/v1/hydrax_market_cache";
 const TTL_MS=2*60*60*1000;
-const MODEL_CACHE_VERSION=10;
+const MODEL_CACHE_VERSION=11;
 const LIMIT_PER_SPORT_DAY=4;
 const cors={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"content-type","Access-Control-Allow-Methods":"GET,POST,OPTIONS","Cache-Control":"no-store"};
 const output=(body:unknown,status=200)=>Response.json(body,{status,headers:cors});
@@ -382,11 +382,19 @@ async function generate(sport:string){
   attachIndependent(candidates,sport),
   availabilityReport(sport)
  ]);
- // Research-only, not actionable; never equate market disparity with validated positive EV.
+ // A weak, explicitly experimental model may influence ranking; it never establishes validated value.
+ const ranked=valued.map((pick:any)=>{
+  const m=pick.independentModel||{};
+  const hasModel=m.status==="RESEARCH_ESTIMATE"&&typeof m.probabilityPercent==="number"&&typeof m.expectedValuePercent==="number";
+  const adjustment=hasModel?0.35*Math.max(-15,Math.min(15,m.expectedValuePercent)):0;
+  return {...pick,modelInfluencedRanking:hasModel,
+    combinedRankingScore:rnd((pick.rankingScore||0)+adjustment)};
+ }).sort((a:any,b:any)=>b.combinedRankingScore-a.combinedRankingScore).slice(0,5)
+   .map((pick:any,i:number)=>({...pick,rank:i+1}));
  return {ok:true,sport,eventsCount:today.length,providerEventsCount:events.length,events:explained,eventsTruncated:today.length>5,
-  picks:valued.map((x:any)=>({...x,rankedOption:true,validatedValue:false})),
+  picks:ranked.map((x:any)=>({...x,rankedOption:true,validatedValue:false})),
   predictionType:"SPORT_SPECIFIC_RESEARCH_ONLY",modelVersion:MODEL_VERSION,modelCacheVersion:MODEL_CACHE_VERSION,monteCarloIterations:10000,
-  candidateCriteria:{minAmericanOdds:-400,maxAmericanOdds:null,perSportLimit:5,minComparablePeersForStrongQuality:3,positiveEVNotRequired:true,validated:false,guaranteedPicks:false,execution:"MANUAL_ONLY"},modelValidation:modelAudit(),playerAvailability:availability,sourceQuality:{market:"THE_ODDS_API",statistics:(sport==="ATP"||sport==="WTA")?"TENNIS_2026_CSV_RESEARCH":sport==="UFC"?"ESPN_UFC_FIGHT_CARDS":ESPN[sport]?"ESPN_UNOFFICIAL_JSON":"NOT_CONFIGURED",
+  candidateCriteria:{minAmericanOdds:-400,maxAmericanOdds:null,perSportLimit:5,minComparablePeersForStrongQuality:3,positiveEVNotRequired:true,validated:false,guaranteedPicks:false,execution:"MANUAL_ONLY"},modelValidation:modelAudit(),playerAvailability:availability,rankingMethod:"MARKET_CONSENSUS_WITH_OPTIONAL_EXPERIMENTAL_MODEL",sourceQuality:{market:"THE_ODDS_API",statistics:(sport==="ATP"||sport==="WTA")?"TENNIS_2026_CSV_RESEARCH":sport==="UFC"?"ESPN_UFC_FIGHT_CARDS":ESPN[sport]?"ESPN_UNOFFICIAL_JSON":"NOT_CONFIGURED",
    dataTimestamp:new Date().toISOString(),sportsbooksQueried:today.reduce((n:number,e:any)=>n+(Array.isArray(e.bookmakers)?e.bookmakers.length:0),0),oddsFreshnessPolicyMinutes:30},
   retrievedAt:new Date().toISOString(),message:today.length?(valued.length?"Selecciones ordenadas por precio y retorno potencial. Revisa riesgos y fuentes; no son predicciones validadas.":"Hay eventos, pero faltan cuotas recientes utilizables con el límite -400."):"No hay eventos futuros hoy, hora de Puerto Rico.",
   warning:failures.join("; ")||"Selecciones para evaluación manual, con probabilidades experimentales. Sin garantías de ganancias ni validación de lesiones, alineaciones o calibración."};
