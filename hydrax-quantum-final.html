@@ -118,7 +118,7 @@ function pickCard(pick){
   market.append(line('Cobro total si acierta',typeof pick.possibleReturn25==='number'?'$'+pick.possibleReturn25.toFixed(2):'—'));
   market.append(line('Pérdida si falla','-$'+capital.toFixed(2)));
   market.append(line('Probabilidad de mercado',fmtPct(pick.probabilityPercent)));
-  market.append(line('Probabilidad de perder',fmtPct(pick.lossProbabilityPercent)));
+  market.append(line('Pérdida implícita (mercado)',fmtPct(pick.lossProbabilityPercent)));
   market.append(line('EV teórico del consenso',fmtPct(pick.evPercent)));
   market.append(line('Calidad de fuente',prettyStatus(pick.dataQuality)));
   market.append(line('Casas comparadas',String(pick.peerBookmakerCount??'Sin confirmar')));
@@ -135,6 +135,7 @@ function pickCard(pick){
   if(im.source)model.append(line('Estadísticas',im.source));
   if(im.sourceError)model.append(line('Fuente inaccesible',im.sourceError));
   model.append(line('Validación',im.validated===true?'Documentada':'No validada'));
+  model.append(line('Ranking incluye modelo',pick.modelInfluencedRanking?'Sí · señal experimental':'No · basado en cuotas'));
   const split=el('div','split');split.append(market,model);card.append(split);
   let caution='Selección clasificada para evaluación manual; el ranking no garantiza ganar.';
   if(pick.dataQuality==='LEGACY_CACHE_NO_CONSENSUS')caution='Cuota guardada anteriormente: no hay consenso ni EV fiable. Confirma que siga disponible.';
@@ -160,7 +161,7 @@ async function run(){
        const d=data.modelValidation;
        const a=el('div','audit');a.append(el('strong','', 'VALIDACIÓN Y CONTROL DE CAPITAL'));
        a.append(el('div','status', 'Backtesting: '+prettyStatus(d.status)+' · Muestra: '+(d.backtestN??0)+' · Brier: '+(d.brierScore==null?'No calculado':d.brierScore)));
-       a.append(el('div','warn','NO BET · Las apuestas solo se registran por acción manual.'));
+       a.append(el('div','warn','Las selecciones son experimentales. Las apuestas solo se registran por acción manual.'));
        results.append(a);
     }
     if(data.playerAvailability){
@@ -174,7 +175,7 @@ async function run(){
       results.append(el('p','warn',data.message || 'No hay cuotas compatibles para generar opciones en este deporte.'));
     } else {
       results.append(el('h2','', 'TOP PLAYS · SELECCIONES CLASIFICADAS'));
-      results.append(el('p','status','Ordenadas por precio, probabilidad implícita y ganancia posible. El ranking todavía no está validado.'));
+      results.append(el('p','status','Ordenadas por cuotas, probabilidad de mercado, ganancia posible y, cuando está disponible, una señal estadística experimental. El ranking no está validado.'));
       data.picks.forEach(p=>results.append(pickCard(p)));
     }
     if(Array.isArray(data.events) && data.events.length){
@@ -214,7 +215,7 @@ async function run(){
       results.append(el('p','status','Fuente cuotas: '+data.sourceQuality.market+' · Consultadas: '+stamp+' (PR). Las cuotas pueden cambiar; confirma en tu sportsbook.'));
     }
     if(data.warning) results.append(el('p','warn','Nota: '+data.warning));
-    results.append(el('p','warn','Modelo experimental: falta calibración y backtesting; el ranking no garantiza rendimiento ni ganancia.'));
+    results.append(el('p','warn','Selecciones sujetas a pérdidas. No hay garantías de rendimiento y los modelos aún no están calibrados ni validados.'));
   } catch(err){
     if(local!==token) return;
     $('state').textContent='Consulta no disponible';
