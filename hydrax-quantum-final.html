@@ -9,6 +9,22 @@
 *{box-sizing:border-box} html,body{margin:0;background:radial-gradient(circle at top,#171717 0,#070707 36%,#000 100%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif} body{min-height:100vh} a{color:inherit} main{max-width:1060px;margin:auto;padding:20px 15px 64px} .header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap} .eyebrow{color:#d8d8d8;font-size:11px;letter-spacing:.24em;font-weight:800} h1{font-size:36px;letter-spacing:.03em;margin:6px 0 6px} h1 span{text-shadow:var(--glow)} .subtitle{color:var(--muted);max-width:740px;line-height:1.55} .card{margin-top:16px;padding:18px;background:linear-gradient(180deg,#0f0f0f,#080808);border:1px solid var(--line);border-radius:22px;box-shadow:0 20px 44px rgba(0,0,0,.28)} .pill{display:inline-block;padding:6px 11px;border:1px solid #474747;border-radius:999px;color:#e6e6e6;background:rgba(255,255,255,.02);font-size:12px} .topnav{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px} .navbtn,.sportbtn,button{appearance:none;border:1px solid #4c4c4c;background:#0f0f0f;color:#fff;border-radius:14px;padding:12px 16px;font:inherit;font-weight:700} .navbtn{text-decoration:none} .navbtn:hover,.sportbtn:hover,button:hover{border-color:#fff;box-shadow:var(--glow)} .primary{background:#fff;color:#000;border-color:#fff} .sports{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px} .sportbtn.active{background:#fff;color:#000;border-color:#fff;box-shadow:var(--glow)} .status{color:#e2e2e2;line-height:1.55;margin-top:12px} .results{display:grid;gap:14px} .pick{padding:18px;border:1px solid #363636;border-radius:20px;background:linear-gradient(180deg,#111,#090909)} .pick h3{margin:12px 0 6px;font-size:30px;line-height:1.12} .pick .selection{font-size:20px;font-weight:800} .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px} .metric{padding:14px;border:1px solid #313131;border-radius:16px;background:#111} .metric small{display:block;color:var(--muted);margin-bottom:8px} .metric b{font-size:20px} .split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px} .subbox{padding:14px;border:1px solid #2d2d2d;border-radius:16px;background:#0b0b0b} .subbox h4{margin:0 0 10px;font-size:14px;letter-spacing:.06em;color:#fff} .kv{display:grid;grid-template-columns:1.15fr .85fr;gap:8px;padding:6px 0;border-bottom:1px dashed #252525} .kv:last-child{border-bottom:none} .k{color:var(--muted)} .warn{color:#f0d69b;line-height:1.55} .good{color:#eaf8ef} .err{color:#ffc4c4} .footer{margin-top:18px;color:#8e8e8e;font-size:13px;text-align:center} @media(max-width:900px){.sports{grid-template-columns:repeat(2,1fr)} .split,.metrics{grid-template-columns:1fr} h1{font-size:30px} .pick h3{font-size:22px}}
 /* HYDRAX iPhone layout hotfix */
 html,body{max-width:100%;overflow-x:hidden}main,.header,.card,.metrics,.metric,.split,.subbox,.pick,.kv{min-width:0;max-width:100%}.metric b,.subbox,.kv .v,#predType,#modelName{overflow-wrap:anywhere;word-break:break-word;white-space:normal}@media(max-width:900px){.metrics,.split{grid-template-columns:minmax(0,1fr)}.metric{width:100%}.header{display:block}.navbtn{font-size:13px}}
+
+/* HYDRAX research dashboard */
+.statusGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 18px}
+.statusTile{min-width:0;border:1px solid #353535;border-radius:15px;background:#0b0b0b;padding:13px}
+.statusTile .value{font-size:15px;line-height:1.45;font-weight:750;overflow-wrap:anywhere}
+.statusTile small{display:block;color:#bcbcbc;font-size:12px;margin-bottom:7px}
+.audit{border:1px solid #424242;border-radius:16px;padding:13px;margin:12px 0;background:#101010}
+.audit strong{display:block;margin-bottom:7px}
+.qcard{border:1px solid #323232;border-radius:16px;padding:16px;background:#0a0a0a}
+.qcard h3{font-size:18px;line-height:1.2;margin:10px 0}
+.researchRow{margin-top:12px;border-top:1px solid #303030;padding-top:12px}
+.instruments{display:flex;gap:7px;flex-wrap:wrap}
+.tag{border:1px solid #555;padding:4px 9px;border-radius:999px;font-size:11px;color:#f5f5f5}
+.bad{color:#e8cda3}
+#results{max-width:100%;overflow-wrap:anywhere}
+@media(max-width:640px){.statusGrid{grid-template-columns:minmax(0,1fr)}.card{padding:16px}.kv{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.k,.v{overflow-wrap:anywhere}}
 </style>
 </head>
 <body>
@@ -64,7 +80,14 @@ const sports=[["UFC","🥊"],["ATP","🎾"],["WTA","🎾"],["NBA","🏀"],["NFL"
 let current="UFC", token=0;
 const $=id=>document.getElementById(id);
 const fmtPct=v=>typeof v==='number' && isFinite(v)? `${v.toFixed(2)}%` : '—';
-const displayModel=v=>v==='RESEARCH_ONLY'?'INVESTIGACIÓN / NO BET':v;
+const displayModel=v=>prettyStatus(v)+' · NO BET';
+const prettyStatus=s=>({
+  DATA_UNAVAILABLE:'Estadísticas no disponibles',RESEARCH_ESTIMATE:'Estimación experimental',
+  NO_INDEPENDENT_DATA:'Sin datos independientes',INSUFFICIENT_HISTORY:'Historial insuficiente',
+  UNMATCHED_TEAMS:'Equipos sin identificar',UNMATCHED_SELECTION:'Selección sin identificar',
+  RESEARCH_ONLY:'Investigación',SPORT_SPECIFIC_RESEARCH_ONLY:'Investigación por deporte',
+  NOT_VALIDATED:'Sin validar',UNAVAILABLE:'No disponible'
+})[s] || String(s||'No disponible').replaceAll('_',' ');
 const fmtStart=t=>{try{return new Date(t).toLocaleString('es-PR',{timeZone:'America/Puerto_Rico',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}catch{return t||'—'}};
 const fmtOdds=v=>typeof v==='number' ? (v>0?`+${v}`:`${v}`) : '—';
 function el(tag, cls, txt){const e=document.createElement(tag); if(cls) e.className=cls; if(txt!==undefined) e.textContent=txt; return e;}
@@ -94,7 +117,7 @@ function pickCard(pick){
   const im=pick.independentModel||{};
   const right=el('div','subbox'); right.append(el('h4','', 'INDEPENDENT MODEL'));
   const readableStatus={DATA_UNAVAILABLE:'DATOS NO DISPONIBLES',RESEARCH_ESTIMATE:'ESTIMACIÓN EXPERIMENTAL',UNMATCHED_TEAMS:'EQUIPOS NO VERIFICADOS',INSUFFICIENT_HISTORY:'HISTORIAL INSUFICIENTE',UNAVAILABLE:'MODELO NO DISPONIBLE',UNMATCHED_SELECTION:'SELECCIÓN NO IDENTIFICADA'};
-  right.append(line('Estado', readableStatus[im.status] || im.status || 'NO DISPONIBLE'));
+  right.append(line('Estado', prettyStatus(im.status)));
   right.append(line('Prob. modelo', fmtPct(im.probabilityPercent)));
   right.append(line('EV modelo', fmtPct(im.expectedValuePercent)));
   right.append(line('Muestra histórica', (im.homeGames!=null && im.awayGames!=null) ? `${im.homeGames} / ${im.awayGames} games` : '—'));
@@ -105,7 +128,7 @@ function pickCard(pick){
 
   const split=el('div','split'); split.append(left,right); card.append(split);
 
-  const note=el('p', (im.decision==='NO_BET' || !im.probabilityPercent)?'warn':'good', (im.reason?`Independent model: ${im.reason}. `:'') + 'HYDRAX separa market view de estimación independiente. Usa criterio y valida lesiones, lineups y contexto antes de apostar.');
+  const note=el('p','warn', (im.reason?`Independent model: ${im.reason}. `:'') + 'HYDRAX separa market view de estimación independiente. Usa criterio y valida lesiones, lineups y contexto antes de apostar.');
   card.append(note);
   return card;
 }
@@ -119,16 +142,31 @@ async function run(){
     if(!res.ok || data.ok===false) throw new Error(data.error || data.message || `HTTP ${res.status}`);
     $('predType').textContent=displayModel(data.predictionType||'—');
     $('eventsCount').textContent=data.eventsCount ?? '—';
-    $('modelName').textContent=data.independentModelVersion || data.modelVersion || 'FORM V1 (EXPERIMENTAL)';
+    $('modelName').textContent='Forma reciente · Experimental';
     $('state').textContent=`${data.eventsCount ?? 0} eventos · ${(data.picks||[]).length} candidatos · ${data.fromCache ? 'datos en caché' : 'consulta fresca'} · ${data.retrievedAt || ''}`;
     const results=$('results');
+    if(data.modelValidation){
+       const d=data.modelValidation;
+       const a=el('div','audit');a.append(el('strong','', 'VALIDACIÓN Y CONTROL DE CAPITAL'));
+       a.append(el('div','status', 'Backtesting: '+prettyStatus(d.status)+' · Muestra: '+(d.backtestN??0)+' · Brier: '+(d.brierScore==null?'No calculado':d.brierScore)));
+       a.append(el('div','warn','NO BET · No se registran apuestas ni se ejecutan stakes automáticamente.'));
+       results.append(a);
+    }
+    if(data.playerAvailability){
+       const p=data.playerAvailability;
+       const panel=el('div','audit');panel.append(el('strong','', 'LESIONES Y ALINEACIONES'));
+       panel.append(el('div','status','Fuente: '+(p.source||'—')+' · Estado: '+prettyStatus(p.status)));
+       panel.append(el('div','warn',p.injuriesVerified&&p.lineupsVerified?'Disponibilidad verificada':'Sin confirmación suficiente de lesiones y alineaciones. No se usaron ajustes inventados.'));
+       results.append(panel);
+    }
     if(!data.picks || !data.picks.length){
       results.append(el('p','warn',data.message || 'NO BET: sin candidatos que cumplan los filtros.'));
     } else {
+      results.append(el('h2','', 'DIFERENCIAS DE MERCADO · NO BET'));
       data.picks.forEach(p=>results.append(pickCard(p)));
     }
     if(Array.isArray(data.events) && data.events.length){
-      const heading=el('div',''); heading.append(el('h2','', 'PARTIDOS DISPONIBLES'),el('p','status','Calendario del día y estado de cuotas. Los partidos NO representan recomendaciones de apuesta.'));
+      const heading=el('div',''); heading.append(el('h2','', 'ESTUDIOS DE PARTIDOS'),el('p','status','Hasta cinco encuentros por deporte con evidencia, disponibilidad y estado del modelo. NO BET no significa que el encuentro esté descartado del análisis.'));
       results.append(heading);
       for(const ev of data.events){
         const card=el('article','pick');
@@ -139,12 +177,24 @@ async function run(){
         block.append(line('Casas disponibles',String(ev.bookmakerCount??0)));
         block.append(line('Casas recientes',String(ev.recentBookmakerCount??0)));
         if(Array.isArray(ev.bestPrices)&&ev.bestPrices.length){
-          block.append(line('Cuotas observadas (no verificadas en tiempo real)',ev.bestPrices.map(x=>x.team+' '+fmtOdds(x.odds)).join(' · ')));
+          for(const x of ev.bestPrices) block.append(line('Mejor cuota observada',x.team+' '+fmtOdds(x.odds)+' · '+(x.bookmaker||'Casa')+' · '+(x.updatedAt?fmtStart(x.updatedAt):'hora no verificada')));
         }
-        block.append(line('Decisión','NO BET — análisis estadístico no validado'));
+        const m=ev.independentModel||{};
+        block.append(line('Modelo',prettyStatus(m.status||'UNAVAILABLE')));
+        if(typeof m.probabilityPercent==='number')block.append(line('Probabilidad experimental · local',fmtPct(m.probabilityPercent)));
+        if(typeof m.expectedMargin==='number')block.append(line('Margen estimado local',String(m.expectedMargin)));
+        if(m.homeGames!=null)block.append(line('Partidos usados (local / visitante)',m.homeGames+' / '+m.awayGames));
+        if(m.source)block.append(line('Estadísticas',m.source));
+        if(m.reason)block.append(line('Limitación',m.reason));
+        if(m.sourceError)block.append(line('Fuente fallida',m.sourceError));
+        block.append(line('Decisión','NO BET — modelo no calibrado; lesiones y lineups sin verificar'));
         card.append(block); results.append(card);
       }
-      if(data.eventsTruncated) results.append(el('p','status','Mostrando 10 partidos; hay más encuentros en la fuente.'));
+      if(data.eventsTruncated) results.append(el('p','status','Mostrando cinco encuentros priorizados; existen más eventos en la fuente.'));
+    }
+    if(data.sourceQuality){
+      const stamp=data.sourceQuality.dataTimestamp?fmtStart(data.sourceQuality.dataTimestamp):'no disponible';
+      results.append(el('p','status','Fuente cuotas: '+data.sourceQuality.market+' · Consultadas: '+stamp+' (PR). Las cuotas pueden cambiar; confirma en tu sportsbook.'));
     }
     if(data.warning) results.append(el('p','warn','Nota: '+data.warning));
     results.append(el('p','warn','Modelo experimental: aún sin calibración ni backtesting validado. No representa una recomendación de apuesta.'));
