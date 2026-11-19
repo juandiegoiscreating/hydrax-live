@@ -88,17 +88,20 @@ function pickCard(pick){
   left.append(line('Prob. consenso', fmtPct(pick.probabilityPercent)));
   left.append(line('Monte Carlo mercado', fmtPct(pick.simulatedPercent)));
   left.append(line('EV teórico', fmtPct(pick.evPercent)));
-  left.append(line('Riesgo', pick.risk||'—'));
-  left.append(line('Inicio', pick.startsAt ? new Date(pick.startsAt).toLocaleString() : '—'));
+  left.append(line('Dispersión entre casas (NO riesgo total)', pick.risk||'—'));
+  left.append(line('Inicio', pick.startsAt ? fmtStart(pick.startsAt) : '—'));
 
   const im=pick.independentModel||{};
   const right=el('div','subbox'); right.append(el('h4','', 'INDEPENDENT MODEL'));
-  right.append(line('Estado', im.status||'UNAVAILABLE'));
+  const readableStatus={DATA_UNAVAILABLE:'DATOS NO DISPONIBLES',RESEARCH_ESTIMATE:'ESTIMACIÓN EXPERIMENTAL',UNMATCHED_TEAMS:'EQUIPOS NO VERIFICADOS',INSUFFICIENT_HISTORY:'HISTORIAL INSUFICIENTE',UNAVAILABLE:'MODELO NO DISPONIBLE',UNMATCHED_SELECTION:'SELECCIÓN NO IDENTIFICADA'};
+  right.append(line('Estado', readableStatus[im.status] || im.status || 'NO DISPONIBLE'));
   right.append(line('Prob. modelo', fmtPct(im.probabilityPercent)));
   right.append(line('EV modelo', fmtPct(im.expectedValuePercent)));
   right.append(line('Muestra histórica', (im.homeGames!=null && im.awayGames!=null) ? `${im.homeGames} / ${im.awayGames} games` : '—'));
-  right.append(line('Source', im.source || im.statistic || '—'));
-  right.append(line('Decision', im.decision || '—'));
+  right.append(line('Fuente', im.source || im.statistic || '—'));
+  if(im.sourceError) right.append(line('Diagnóstico de fuente',im.sourceError));
+  if(im.statsDiscoverySource) right.append(line('Identificación equipos',im.statsDiscoverySource));
+  right.append(line('Decisión', im.decision==='NO_BET'?'NO BET — falta validación':(im.decision||'—')));
 
   const split=el('div','split'); split.append(left,right); card.append(split);
 
