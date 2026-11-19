@@ -40,7 +40,7 @@ html,body{max-width:100%;overflow-x:hidden}main,.header,.card,.metrics,.metric,.
       <div class="metric"><small>Modelo</small><b id="modelName">—</b></div>
     </div>
     <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
-      <button id="run" class="primary">GENERATE TODAY'S BEST BETS</button>
+      <button id="run" class="primary">ANALYZE TODAY'S GAMES</button>
       <a class="navbtn" href="./tracker.html">OPEN BET TRACKER</a>
     </div>
     <div id="state" class="status">Selecciona un deporte y ejecuta el análisis.</div>
@@ -64,6 +64,8 @@ const sports=[["UFC","🥊"],["ATP","🎾"],["WTA","🎾"],["NBA","🏀"],["NFL"
 let current="UFC", token=0;
 const $=id=>document.getElementById(id);
 const fmtPct=v=>typeof v==='number' && isFinite(v)? `${v.toFixed(2)}%` : '—';
+const displayModel=v=>v==='RESEARCH_ONLY'?'INVESTIGACIÓN / NO BET':v;
+const fmtStart=t=>{try{return new Date(t).toLocaleString('es-PR',{timeZone:'America/Puerto_Rico',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}catch{return t||'—'}};
 const fmtOdds=v=>typeof v==='number' ? (v>0?`+${v}`:`${v}`) : '—';
 function el(tag, cls, txt){const e=document.createElement(tag); if(cls) e.className=cls; if(txt!==undefined) e.textContent=txt; return e;}
 function renderSports(){
@@ -112,15 +114,34 @@ async function run(){
     const data=await res.json();
     if(local!==token) return;
     if(!res.ok || data.ok===false) throw new Error(data.error || data.message || `HTTP ${res.status}`);
-    $('predType').textContent=data.predictionType||'—';
+    $('predType').textContent=displayModel(data.predictionType||'—');
     $('eventsCount').textContent=data.eventsCount ?? '—';
     $('modelName').textContent=data.independentModelVersion || data.modelVersion || 'FORM V1 (EXPERIMENTAL)';
-    $('state').textContent=`${data.eventsCount ?? 0} eventos · ${(data.picks||[]).length} picks · ${data.fromCache ? 'datos en caché' : 'consulta fresca'} · ${data.retrievedAt || ''}`;
+    $('state').textContent=`${data.eventsCount ?? 0} eventos · ${(data.picks||[]).length} candidatos · ${data.fromCache ? 'datos en caché' : 'consulta fresca'} · ${data.retrievedAt || ''}`;
     const results=$('results');
     if(!data.picks || !data.picks.length){
-      results.append(el('p','warn',`${data.eventsCount ?? 0} eventos encontrados. NO BET: no hay candidatos que cumplan los filtros actuales. Esto no es un fallo de conexión.`));
+      results.append(el('p','warn',data.message || 'NO BET: sin candidatos que cumplan los filtros.'));
     } else {
       data.picks.forEach(p=>results.append(pickCard(p)));
+    }
+    if(Array.isArray(data.events) && data.events.length){
+      const heading=el('div',''); heading.append(el('h2','', 'PARTIDOS DISPONIBLES'),el('p','status','Calendario del día y estado de cuotas. Los partidos NO representan recomendaciones de apuesta.'));
+      results.append(heading);
+      for(const ev of data.events){
+        const card=el('article','pick');
+        card.append(el('span','pill', ev.status==='MARKET_DATA_AVAILABLE'?'DATOS DE MERCADO':'CUOTAS INSUFICIENTES'));
+        card.append(el('h3','',ev.event||'Encuentro sin identificar'));
+        const block=el('div','subbox');
+        block.append(line('Comienzo (PR)',fmtStart(ev.startsAt)));
+        block.append(line('Casas disponibles',String(ev.bookmakerCount??0)));
+        block.append(line('Casas recientes',String(ev.recentBookmakerCount??0)));
+        if(Array.isArray(ev.bestPrices)&&ev.bestPrices.length){
+          block.append(line('Cuotas observadas (no verificadas en tiempo real)',ev.bestPrices.map(x=>x.team+' '+fmtOdds(x.odds)).join(' · ')));
+        }
+        block.append(line('Decisión','NO BET — análisis estadístico no validado'));
+        card.append(block); results.append(card);
+      }
+      if(data.eventsTruncated) results.append(el('p','status','Mostrando 10 partidos; hay más encuentros en la fuente.'));
     }
     if(data.warning) results.append(el('p','warn','Nota: '+data.warning));
     results.append(el('p','warn','Modelo experimental: aún sin calibración ni backtesting validado. No representa una recomendación de apuesta.'));
