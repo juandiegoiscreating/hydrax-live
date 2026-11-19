@@ -7,6 +7,8 @@
 <style>
 :root{--bg:#030303;--panel:#0b0b0b;--panel2:#101010;--text:#f8f8f8;--muted:#bababa;--line:#2e2e2e;--soft:#dcdcdc;--chip:#151515;--ok:#dfffe7;--err:#ffd1d1;--glow:0 0 8px rgba(255,255,255,.18),0 0 22px rgba(255,255,255,.08);}
 *{box-sizing:border-box} html,body{margin:0;background:radial-gradient(circle at top,#171717 0,#070707 36%,#000 100%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif} body{min-height:100vh} a{color:inherit} main{max-width:1060px;margin:auto;padding:20px 15px 64px} .header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap} .eyebrow{color:#d8d8d8;font-size:11px;letter-spacing:.24em;font-weight:800} h1{font-size:36px;letter-spacing:.03em;margin:6px 0 6px} h1 span{text-shadow:var(--glow)} .subtitle{color:var(--muted);max-width:740px;line-height:1.55} .card{margin-top:16px;padding:18px;background:linear-gradient(180deg,#0f0f0f,#080808);border:1px solid var(--line);border-radius:22px;box-shadow:0 20px 44px rgba(0,0,0,.28)} .pill{display:inline-block;padding:6px 11px;border:1px solid #474747;border-radius:999px;color:#e6e6e6;background:rgba(255,255,255,.02);font-size:12px} .topnav{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px} .navbtn,.sportbtn,button{appearance:none;border:1px solid #4c4c4c;background:#0f0f0f;color:#fff;border-radius:14px;padding:12px 16px;font:inherit;font-weight:700} .navbtn{text-decoration:none} .navbtn:hover,.sportbtn:hover,button:hover{border-color:#fff;box-shadow:var(--glow)} .primary{background:#fff;color:#000;border-color:#fff} .sports{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px} .sportbtn.active{background:#fff;color:#000;border-color:#fff;box-shadow:var(--glow)} .status{color:#e2e2e2;line-height:1.55;margin-top:12px} .results{display:grid;gap:14px} .pick{padding:18px;border:1px solid #363636;border-radius:20px;background:linear-gradient(180deg,#111,#090909)} .pick h3{margin:12px 0 6px;font-size:30px;line-height:1.12} .pick .selection{font-size:20px;font-weight:800} .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px} .metric{padding:14px;border:1px solid #313131;border-radius:16px;background:#111} .metric small{display:block;color:var(--muted);margin-bottom:8px} .metric b{font-size:20px} .split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px} .subbox{padding:14px;border:1px solid #2d2d2d;border-radius:16px;background:#0b0b0b} .subbox h4{margin:0 0 10px;font-size:14px;letter-spacing:.06em;color:#fff} .kv{display:grid;grid-template-columns:1.15fr .85fr;gap:8px;padding:6px 0;border-bottom:1px dashed #252525} .kv:last-child{border-bottom:none} .k{color:var(--muted)} .warn{color:#f0d69b;line-height:1.55} .good{color:#eaf8ef} .err{color:#ffc4c4} .footer{margin-top:18px;color:#8e8e8e;font-size:13px;text-align:center} @media(max-width:900px){.sports{grid-template-columns:repeat(2,1fr)} .split,.metrics{grid-template-columns:1fr} h1{font-size:30px} .pick h3{font-size:22px}}
+/* HYDRAX iPhone layout hotfix */
+html,body{max-width:100%;overflow-x:hidden}main,.header,.card,.metrics,.metric,.split,.subbox,.pick,.kv{min-width:0;max-width:100%}.metric b,.subbox,.kv .v,#predType,#modelName{overflow-wrap:anywhere;word-break:break-word;white-space:normal}@media(max-width:900px){.metrics,.split{grid-template-columns:minmax(0,1fr)}.metric{width:100%}.header{display:block}.navbtn{font-size:13px}}
 </style>
 </head>
 <body>
@@ -112,15 +114,16 @@ async function run(){
     if(!res.ok || data.ok===false) throw new Error(data.error || data.message || `HTTP ${res.status}`);
     $('predType').textContent=data.predictionType||'—';
     $('eventsCount').textContent=data.eventsCount ?? '—';
-    $('modelName').textContent=data.independentModelVersion || data.modelVersion || 'HYDRAX';
+    $('modelName').textContent=data.independentModelVersion || data.modelVersion || 'FORM V1 (EXPERIMENTAL)';
     $('state').textContent=`${data.eventsCount ?? 0} eventos · ${(data.picks||[]).length} picks · ${data.fromCache ? 'datos en caché' : 'consulta fresca'} · ${data.retrievedAt || ''}`;
     const results=$('results');
     if(!data.picks || !data.picks.length){
-      results.append(el('p','warn',data.message || 'No hay picks disponibles.'));
+      results.append(el('p','warn',`${data.eventsCount ?? 0} eventos encontrados. NO BET: no hay candidatos que cumplan los filtros actuales. Esto no es un fallo de conexión.`));
     } else {
       data.picks.forEach(p=>results.append(pickCard(p)));
     }
     if(data.warning) results.append(el('p','warn','Nota: '+data.warning));
+    results.append(el('p','warn','Modelo experimental: aún sin calibración ni backtesting validado. No representa una recomendación de apuesta.'));
   } catch(err){
     if(local!==token) return;
     $('state').textContent='Consulta no disponible';
