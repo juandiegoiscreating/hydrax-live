@@ -84,7 +84,7 @@ const displayModel=v=>prettyStatus(v)+' · NO BET';
 const prettyStatus=s=>({
   DATA_UNAVAILABLE:'Estadísticas no disponibles',RESEARCH_ESTIMATE:'Estimación experimental',
   NO_INDEPENDENT_DATA:'Sin datos independientes',INSUFFICIENT_HISTORY:'Historial insuficiente',
-  UNMATCHED_TEAMS:'Equipos sin identificar',UNMATCHED_SELECTION:'Selección sin identificar',
+  UNMATCHED_TEAMS:'Equipos sin identificar',UNMATCHED_SELECTION:'Selección sin identificar',UNMATCHED_PLAYERS:'Tenistas sin identificar',FIGHT_CARD_VERIFIED:'Cartelera verificada; modelo pendiente',NO_VERIFIED_FIGHT_STATS:'Estadísticas UFC insuficientes',
   RESEARCH_ONLY:'Investigación',SPORT_SPECIFIC_RESEARCH_ONLY:'Investigación por deporte',
   NOT_VALIDATED:'Sin validar',UNAVAILABLE:'No disponible'
 })[s] || String(s||'No disponible').replaceAll('_',' ');
@@ -183,7 +183,12 @@ async function run(){
         block.append(line('Modelo',prettyStatus(m.status||'UNAVAILABLE')));
         if(typeof m.probabilityPercent==='number')block.append(line('Probabilidad experimental · local',fmtPct(m.probabilityPercent)));
         if(typeof m.expectedMargin==='number')block.append(line('Margen estimado local',String(m.expectedMargin)));
-        if(m.homeGames!=null)block.append(line('Partidos usados (local / visitante)',m.homeGames+' / '+m.awayGames));
+        if(m.homeGames!=null)block.append(line((current==='ATP'||current==='WTA')?'Historial (jugador A / B)':'Partidos usados (local / visitante)',m.awayGames+' / '+m.homeGames));
+        if(m.playerAFormLast10!=null && m.playerBFormLast10!=null)block.append(line('Forma últimos 10 (A / B)',m.playerAFormLast10+'/10 · '+m.playerBFormLast10+'/10'));
+        if(m.modelVersion)block.append(line('Modelo específico',m.modelVersion));
+        if(m.sourceLastTournamentDate)block.append(line('Último torneo documentado',m.sourceLastTournamentDate));
+        if(m.sourceLicense)block.append(line('Licencia de datos',m.sourceLicense));
+        if(m.matchupName)block.append(line('Cartelera confirmada',m.matchupName));
         if(m.source)block.append(line('Estadísticas',m.source));
         if(m.reason)block.append(line('Limitación',m.reason));
         if(m.sourceError)block.append(line('Fuente fallida',m.sourceError));
