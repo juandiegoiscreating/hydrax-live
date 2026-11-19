@@ -1,69 +1,69 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<meta name="theme-color" content="#06110b"/>
-<meta name="description" content="HYDRAX QUANTUM — Sports Intelligence Terminal"/>
-<title>HYDRAX QUANTUM | Intelligence Terminal</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HYDRAX - Sports Intelligence by JD</title>
+<meta name="theme-color" content="#050505">
 <style>
-:root{color-scheme:dark;--bg:#06100b;--panel:#0d1b14;--panel2:#10261a;--border:#234332;--green:#83ffab;--green2:#2bcb72;--ink:#effff4;--muted:#93a99d;--yellow:#f6c765;--red:#ff8d92}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 60% -15%,#153f25 0%,#06100b 53%);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);min-height:100vh}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed} .wrap{max-width:1120px;margin:auto;padding:22px 17px 100px} .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}.brand{display:flex;align-items:center;gap:12px}.logo{width:46px;height:46px;border:1px solid #53ee91;border-radius:13px;display:grid;place-items:center;color:var(--green);font-size:25px;box-shadow:0 0 25px #2bcb7230;background:#0b2114}.eyebrow{font-size:10px;letter-spacing:2.4px;color:var(--green);font-weight:750}.brand h1{margin:0;letter-spacing:1px;font-size:23px;line-height:1.12}.sub{font-size:11px;color:var(--muted);letter-spacing:1px}.status{border:1px solid var(--border);border-radius:100px;padding:8px 11px;color:var(--muted);font-size:11px;white-space:nowrap}.status.good{color:var(--green);border-color:#337b51}.hero{border:1px solid #285f3b;border-radius:21px;padding:25px;background:linear-gradient(110deg,#112a1c,#08160e 70%);position:relative;overflow:hidden;box-shadow:0 12px 60px #0004}.hero:after{content:"";position:absolute;right:-78px;top:-85px;width:290px;height:290px;border:1px solid #4aff8530;border-radius:50%;box-shadow:0 0 0 42px #4aff8509,0 0 0 95px #4aff8505;pointer-events:none}.hero h2{font-size:clamp(24px,4vw,37px);line-height:1.12;letter-spacing:.3px;margin:8px 0 12px;max-width:610px}.hero p{color:var(--muted);max-width:600px;margin:0}.pill{display:inline-block;color:var(--green);background:#1d452b;border:1px solid #336f44;border-radius:100px;padding:3px 9px;font-size:11px;letter-spacing:1px}.grid{display:grid;gap:14px}.metrics{grid-template-columns:repeat(4,1fr);margin:17px 0}.panel{background:linear-gradient(155deg,var(--panel),#09150e);border:1px solid var(--border);border-radius:16px;padding:17px}.metric-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}.metric-val{font-weight:800;font-size:25px;margin:4px 0}.metric-note{font-size:11px;color:var(--muted)}.section{margin-top:23px}.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 12px}.section h3{font-size:17px;margin:0;letter-spacing:.3px}.small{font-size:12px;color:var(--muted)}.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:end}.field{display:flex;flex-direction:column;gap:5px;min-width:0}.field label{font-size:11px;color:var(--muted)}input,select{background:#07150d;color:var(--ink);border:1px solid #335740;border-radius:10px;padding:11px;min-width:0;max-width:100%;outline:none}input:focus,select:focus{border-color:#65e69a}input[type=date]{width:164px}.short{width:83px}.wide{flex:1;min-width:220px}.btn{border:1px solid #387750;border-radius:11px;padding:11px 16px;background:#143b23;color:var(--ink);font-weight:700;white-space:nowrap}.btn.primary{background:var(--green);color:#062011;border-color:var(--green)}.btn.secondary{background:#0c2215}.btn:hover{filter:brightness(1.1)}.btn:focus-visible{outline:2px solid white;outline-offset:2px}.divider{height:1px;background:var(--border);margin:17px 0}.tabs{display:flex;gap:8px;overflow:auto;margin:13px 0 0;padding-bottom:3px}.tab{white-space:nowrap;padding:9px 14px;border-radius:100px;background:#10261a;border:1px solid var(--border);color:var(--muted)}.tab.active{color:#052011;background:var(--green);border-color:var(--green);font-weight:750}.events{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}.game{background:#0b1b12;border:1px solid #254732;border-radius:13px;padding:15px}.game h4{font-size:15px;margin:8px 0}.game .meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--muted);font-size:11px}.tag{font-size:10px;display:inline-block;border:1px solid #47745a;border-radius:7px;padding:2px 7px;color:#c5ffdb}.tag.warn{color:var(--yellow);border-color:#6d5d34}.tag.danger{color:var(--red);border-color:#76444a}.prices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.quote{padding:10px;border-radius:10px;background:#13301e;border:1px solid #315840}.quote b{display:block;color:var(--green);font-size:17px}.quote span{font-size:11px;display:block;color:#cce7d4;word-break:break-word}.quote small{font-size:10px;color:var(--muted)}.empty{color:var(--muted);padding:25px 10px;text-align:center;border:1px dashed #345c42;border-radius:12px;margin-top:12px}.message{margin-top:12px;font-size:13px;padding:12px;border:1px solid #476c4e;border-radius:11px;color:#d6f9de;background:#122819;overflow-wrap:anywhere}.message.bad{border-color:#795052;background:#281518;color:#ffc2c4}.footer{font-size:11px;line-height:1.6;color:var(--muted);padding-top:25px}.footnote{color:var(--yellow);font-size:12px}.hint{font-size:11px;color:var(--muted);margin:9px 0 0}.hide{display:none!important}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace} .loader{display:inline-block;width:12px;height:12px;border:2px solid #16643b;border-top-color:var(--green);border-radius:100%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}@keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:720px){.metrics{grid-template-columns:repeat(2,1fr)}.events{grid-template-columns:1fr}.hero{padding:20px}.top{align-items:flex-start}.brand h1{font-size:20px}.status{font-size:10px;padding:6px 8px}.wrap{padding:15px 12px 90px}.controls>.btn{flex:1}.field.wide{width:100%}.prices{grid-template-columns:repeat(2,minmax(0,1fr))}}
+:root{--bg:#050505;--panel:#0c0c0c;--panel2:#111;--text:#f7f7f7;--muted:#b9b9b9;--line:#2c2c2c;--neon:#ffffff;--glow:0 0 10px rgba(255,255,255,.18),0 0 24px rgba(255,255,255,.08);}
+*{box-sizing:border-box} html,body{margin:0;background:radial-gradient(circle at top,#1a1a1a 0,#050505 42%,#000 100%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+a{color:inherit} main{max-width:980px;margin:auto;padding:22px 16px 56px} .nav{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap} .brand small{display:block;color:#d0d0d0;letter-spacing:.22em;font-size:11px;font-weight:700} .brand h1{margin:6px 0 4px;font-size:38px;letter-spacing:.03em} .brand h1 span{color:#fff;text-shadow:var(--glow)} .sub{color:var(--muted);line-height:1.55} .card{background:linear-gradient(180deg,#0f0f0f,#080808);border:1px solid var(--line);border-radius:24px;padding:22px;box-shadow:0 20px 40px rgba(0,0,0,.28)} .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:18px} .menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px} .tile{display:block;text-decoration:none;padding:20px;border-radius:20px;background:linear-gradient(180deg,#111,#090909);border:1px solid #353535;min-height:170px} .tile:hover{border-color:#fff;box-shadow:var(--glow)} .pill{display:inline-block;border:1px solid #4d4d4d;border-radius:999px;padding:6px 12px;font-size:12px;color:#e6e6e6} h2{margin:0 0 10px;font-size:22px} .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px} .btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 18px;border-radius:14px;text-decoration:none;border:1px solid #fff;background:#fff;color:#000;font-weight:800} .btn.secondary{background:#101010;color:#fff;border-color:#3a3a3a} .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px} ul{padding-left:18px} .footer{text-align:center;color:#8d8d8d;font-size:13px;margin-top:20px} @media(max-width:820px){.hero,.grid2,.menu{grid-template-columns:1fr} .brand h1{font-size:31px}}
 </style>
 </head>
-<body><main class="wrap">
-<header class="top"><div class="brand"><div class="logo">⬡</div><div><div class="eyebrow">SPORTS INTELLIGENCE TERMINAL</div><h1>HYDRAX <span style="color:var(--green)">QUANTUM</span></h1><div class="sub">TRUTH ABOVE ALL · FREE DATA NETWORK</div></div></div><div id="connection" class="status">● SIN CONECTAR</div></header>
-<section class="hero"><span class="pill">HYDRAX LIVE · MVP 56</span><h2>El mercado habla.<br><span style="color:var(--green)">Los datos deciden.</span></h2><p>Radar deportivo, cuotas reales y consenso de mercado. Sin picks ficticios ni apuestas automáticas. Datos consultados cuando tú los solicitas.</p></section>
-<section class="grid metrics"><div class="panel"><div class="metric-label">Divisiones radar</div><div id="mDiv" class="metric-val">—</div><div class="metric-note">Con respuesta válida</div></div><div class="panel"><div class="metric-label">Eventos radar</div><div id="mGames" class="metric-val">—</div><div class="metric-note">Según fecha y semana</div></div><div class="panel"><div class="metric-label">Eventos con cuotas</div><div id="mOdds" class="metric-val">—</div><div class="metric-note">Proveedor en vivo</div></div><div class="panel"><div class="metric-label">Créditos API</div><div id="mQuota" class="metric-val">—</div><div class="metric-note">Última consulta de cuotas</div></div></section>
-<section class="panel section"><div class="section-head"><h3>01 / Acceso seguro</h3><span class="tag">CLAVE PRIVADA</span></div><div class="controls"><div class="field wide"><label for="token">HYDRAX_DASHBOARD_TOKEN (no es la clave de Odds API)</label><input id="token" type="password" placeholder="Pega aquí tu token privado" autocomplete="off"/></div><button class="btn secondary" id="connect">Guardar en esta sesión</button><button class="btn secondary" id="forget">Borrar</button></div><p class="hint">El token se conserva solamente en la sesión de esta pestaña. No se publica en GitHub ni se incluye en la URL.</p><div id="msg" class="message hide" role="status"></div></section>
-<section class="section panel"><div class="section-head"><h3>02 / Radar deportivo</h3><span class="small">Sin consumir créditos de Odds API</span></div><div class="controls"><div class="field"><label for="date">Fecha (Puerto Rico)</label><input id="date" type="date"/></div><div class="field"><label for="year">Temporada NCAAF</label><input class="short" id="year" type="number" min="2020" max="2100" value="2026"/></div><div class="field"><label for="week">Semana NCAAF</label><input class="short" id="week" type="number" min="1" max="20" value="12"/></div><button class="btn primary" id="loadRadar">Consultar radar</button><button class="btn secondary" id="loadUfc">Consultar UFC</button></div><div id="radarTabs" class="tabs"></div><div id="radarEvents" class="events"><div class="empty" style="grid-column:1/-1">Pulsa «Consultar radar» para recibir partidos reales.</div></div><div id="radarMsg" class="hint"></div></section>
-<section class="section panel"><div class="section-head"><h3>03 / Escáner de cuotas</h3><span class="tag warn">CONSUME CRÉDITOS</span></div><div class="controls"><div class="field wide"><label for="sport">Deporte o torneo</label><select id="sport"><option value="basketball_nba">NBA</option><option value="americanfootball_nfl">NFL</option><option value="baseball_mlb">MLB</option><option value="americanfootball_ncaaf">NCAAF</option><option value="basketball_ncaab">NCAAB</option><option value="mma_mixed_martial_arts">MMA / UFC</option><option value="tennis_custom">ATP / WTA (clave personalizada)</option></select></div><div id="customWrap" class="field wide hide"><label for="customSport">Clave exacta del torneo según The Odds API</label><input id="customSport" placeholder="tennis_atp_..."/></div><button class="btn primary" id="loadOdds">Consultar cuotas</button><button class="btn secondary" id="loadConsensus">Ver consenso</button></div><p class="hint">Cada clic inicia una consulta al proveedor. Las mejores cuotas no son recomendaciones automáticas.</p><div id="oddsEvents" class="events"><div class="empty" style="grid-column:1/-1">Elige un deporte y pulsa «Consultar cuotas».</div></div></section>
-<section class="section panel"><div class="section-head"><h3>04 / Inteligencia y disciplina</h3><span class="tag warn">NO BET HASTA VALIDAR</span></div><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px"><div class="panel"><div class="metric-label">Modelo independiente</div><strong>EN DESARROLLO</strong><p class="small">No hay predicciones estadísticas validadas para todos los deportes.</p></div><div class="panel"><div class="metric-label">Mercado</div><strong>CONSENSO ≠ PREDICCIÓN</strong><p class="small">Las probabilidades basadas en cuotas no certifican una ventaja real.</p></div><div class="panel"><div class="metric-label">Capital Shield</div><strong>CONTROL MANUAL</strong><p class="small">Esta interfaz no registra ni ejecuta apuestas.</p></div></div><div id="consensusResults" class="events"></div></section>
-<footer class="footer">HYDRAX QUANTUM · MVP v1.0 · Datos consultados desde Supabase con autorización privada. Las cuotas cambian, pueden faltar mercados y no aseguran ganancias. Confirma siempre precios y condiciones directamente en tu sportsbook. <span class="footnote">NO BET cuando la información o los modelos no están validados.</span></footer>
+<body>
+<main>
+  <section class="nav">
+    <div class="brand">
+      <small>SPORTS INTELLIGENCE TERMINAL</small>
+      <h1>HYDRAX <span>by JD</span></h1>
+      <div class="sub">Black edition · white neon · research-driven workflow</div>
+    </div>
+    <span class="pill">PERSONAL OPS PANEL</span>
+  </section>
+
+  <section class="hero">
+    <div class="card">
+      <span class="pill">HOME</span>
+      <h2 style="margin-top:14px">HYDRAX – Sports Intelligence by JD</h2>
+      <p class="sub">Tu terminal central. Desde aquí entras al motor de intelligence o al registro de apuestas. El análisis público no requiere contraseña. El tracker sigue siendo tu espacio privado para registrar picks, stake, ganancia posible y resultado.</p>
+      <div class="actions">
+        <a class="btn" href="./hydrax-quantum-final.html">Open Intelligence</a>
+        <a class="btn secondary" href="./tracker.html">Open Bet Tracker</a>
+      </div>
+    </div>
+    <div class="card">
+      <span class="pill">ESTRUCTURA</span>
+      <div class="grid2" style="grid-template-columns:1fr;margin-top:14px">
+        <div>
+          <h2>Intelligence</h2>
+          <ul class="sub">
+            <li>Submenús por deporte</li>
+            <li>Independent model + market comparison</li>
+            <li>Monte Carlo y EV teórico</li>
+            <li>Botón de mejores bets del día</li>
+          </ul>
+        </div>
+        <div>
+          <h2>Bet Tracker</h2>
+          <ul class="sub">
+            <li>Registro manual de apuestas</li>
+            <li>Stake, odds, status y notas</li>
+            <li>Historial y resumen</li>
+            <li>Tracking por deporte</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:18px">
+    <span class="pill">RUTA RÁPIDA</span>
+    <div class="menu" style="margin-top:14px">
+      <a class="tile" href="./hydrax-quantum-final.html"><span class="pill">INTELLIGENCE</span><h2 style="margin-top:16px">Generate Today’s Best Bets</h2><p class="sub">Escáner diario por UFC, ATP, WTA, NBA, NFL, MLB, NCAAB y NCAAF.</p></a>
+      <a class="tile" href="./tracker.html"><span class="pill">TRACKER</span><h2 style="margin-top:16px">Registro de Apuestas</h2><p class="sub">Aquí está el registro de apuestas. Ese es el módulo donde guardas tus picks reales.</p></a>
+    </div>
+  </section>
+
+  <div class="footer">HYDRAX • Sports Intelligence by JD</div>
 </main>
-<script>
-'use strict';
-const API='https://acpwxupqpbyesbhuixkq.supabase.co/functions/v1/hydrax-dashboard-feed';
-const $=id=>document.getElementById(id);
-const enc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const safeNum=v=>typeof v==='number'&&Number.isFinite(v)?v:null;
-const stamp=s=>{if(!s)return 'Hora no disponible';const d=new Date(s);return Number.isNaN(d.getTime())?String(s):d.toLocaleString('es-PR',{timeZone:'America/Puerto_Rico',dateStyle:'short',timeStyle:'short'});};
-let radar=[],currentTab='',busy=false;
-function todayPR(){const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/Puerto_Rico',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const o=Object.fromEntries(parts.map(p=>[p.type,p.value]));return `${o.year}-${o.month}-${o.day}`;}
-$('date').value=todayPR();
-$('token').value=sessionStorage.getItem('hydrax_token')||'';
-if($('token').value) $('connection').textContent='● TOKEN CARGADO';
-function message(msg,error=false){$('msg').textContent=msg;$('msg').className='message'+(error?' bad':'');}
-function setBusy(on,label){busy=on;for(const id of ['loadRadar','loadUfc','loadOdds','loadConsensus']) $(id).disabled=on;$('connection').textContent=on?'◌ CONSULTANDO':label||'● CONECTADO';$('connection').className='status'+(!on?' good':'');}
-$('connect').onclick=()=>{const t=$('token').value.trim();if(t.length<32){message('El token debe tener 32 caracteres o más.',true);return;}sessionStorage.setItem('hydrax_token',t);$('connection').textContent='● TOKEN CARGADO';message('Token guardado en esta sesión. Pulsa un botón de consulta para verificar conexión.');};
-$('forget').onclick=()=>{sessionStorage.removeItem('hydrax_token');$('token').value='';$('connection').textContent='● SIN CONECTAR';$('connection').className='status';message('Token borrado de esta sesión.');};
-async function load(mode,params={}){
-  const token=$('token').value.trim();
-  if(!token){message('Primero introduce tu token privado y pulsa «Guardar en esta sesión».',true);return null;}
-  if(busy)return null;
-  setBusy(true);
-  const query=new URLSearchParams({mode,...params});
-  let success=false;
-  try{
-    const response=await fetch(API+'?'+query.toString(),{headers:{'x-hydrax-dashboard-token':token},cache:'no-store'});
-    const data=await response.json();
-    if(!response.ok || !data.ok){const extra=data.upstreamStatus?` (upstream ${data.upstreamStatus})`:'';throw new Error((data.error||'ERROR')+extra+' '+(data.detail?.error||''));}
-    success=true;
-    message('Consulta '+mode+' completada: '+new Date().toLocaleTimeString('es-PR')+'.');
-    return data.data;
-  }catch(err){message('No se pudo consultar '+mode+': '+err.message+'. Verifica token, Edge Function y permisos.',true);return null;}
-  finally{setBusy(false,success?'● CONECTADO':'● SIN CONEXIÓN');}
-}
-function simpleGame(game,sport){const home=game.home??game.homeTeam??'Equipo no disponible';const away=game.away??game.awayTeam??'Equipo no disponible';const time=game.startsAt??game.startTime??game.commenceTime;const state=game.status??'Programado';const hs=game.homeScore,as=game.awayScore;return `<article class="game"><div class="meta"><span class="tag">${enc(sport)}</span><span>${enc(stamp(time))}</span></div><h4>${enc(away)} <span style="color:var(--muted)">@</span> ${enc(home)}</h4><div class="meta"><span>${enc(state)}</span>${hs!==null&&hs!==undefined&&as!==null&&as!==undefined?`<span>· ${enc(as)} – ${enc(hs)}</span>`:''}</div></article>`;}
-function showTab(sport){currentTab=sport;const selected=radar.find(d=>d.sport===sport);$('radarTabs').innerHTML=radar.map(d=>`<button type="button" class="tab ${d.sport===sport?'active':''}" data-sport="${enc(d.sport)}">${enc(d.sport)} ${Array.isArray(d.games)?'('+d.games.length+')':''}</button>`).join('');document.querySelectorAll('#radarTabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.sport));const games=selected?.games||[];$('radarEvents').innerHTML=games.length?games.slice(0,200).map(g=>simpleGame(g,sport)).join(''):`<div class="empty" style="grid-column:1/-1">${selected?.ok===false?'Fuente no disponible':'No hay encuentros en este período.'}</div>`;}
-$('loadRadar').onclick=async()=>{const data=await load('radar',{date:$('date').value,year:$('year').value,week:$('week').value});if(!data)return;radar=Array.isArray(data.divisions)?data.divisions:[];$('mDiv').textContent=radar.filter(d=>d.ok).length+' / '+radar.length;$('mGames').textContent=radar.reduce((n,d)=>n+(Array.isArray(d.games)?d.games.length:0),0);$('radarMsg').textContent='NCAAF muestra la semana indicada, no necesariamente solo la fecha seleccionada. Algunos proveedores pueden limitar paginación. Refrescado: '+stamp(data.retrievedAt);if(radar.length)showTab(radar[0].sport);};
-$('loadUfc').onclick=async()=>{const data=await load('ufc');if(!data)return;const raw=Array.isArray(data.events)?data.events:Array.isArray(data.data)?data.data:[];$('radarTabs').innerHTML='<span class="tab active">UFC</span>';const list=raw.slice(0,50);$('radarEvents').innerHTML=list.length?list.map(item=>{const e=item&&typeof item==='object'?item:{};return `<article class="game"><div class="meta"><span class="tag">UFC</span></div><h4>${enc(e.title||e.name||e.event_name||'Evento UFC')}</h4><div class="meta">${enc(stamp(e.date||e.startsAt||e.start_time))}</div></article>`;}).join(''):`<div class="empty" style="grid-column:1/-1">La función UFC respondió, pero no expuso un arreglo de eventos compatible con esta pantalla. Consulta la respuesta en Supabase para adaptar el formato.</div>`;};
-$('sport').onchange=()=>{$('customWrap').classList.toggle('hide',$('sport').value!=='tennis_custom');};
-function getSport(){return $('sport').value==='tennis_custom'?$('customSport').value.trim():$('sport').value;}
-function oddsCard(e){const title=`${e.awayTeam||'Visitante'} @ ${e.homeTeam||'Local'}`;const quotes=Array.isArray(e.bestAvailablePrices)?e.bestAvailablePrices:[];return `<article class="game"><div class="meta"><span class="tag">${enc(e.id||'MERCADO')}</span><span>${enc(stamp(e.commenceTime))}</span></div><h4>${enc(title)}</h4><div class="meta">${enc(e.freshQuotes??0)} cuotas recientes · ${enc(e.totalQuotes??0)} totales</div>${quotes.length?`<div class="prices">${quotes.map(q=>`<div class="quote"><span>${enc(q.selection)}${q.point===null||q.point===undefined?'':' · '+enc(q.point)}</span><b>${q.americanOdds>0?'+':''}${enc(q.americanOdds)}</b><small>${enc(q.bookmaker)} · implícita ${enc(q.impliedProbabilityPercent)}%</small></div>`).join('')}</div>`:'<div class="small" style="margin-top:10px">Sin cuotas recientes comparables.</div>'}<p class="hint">DECISIÓN: NO BET · No hay modelo independiente validado.</p></article>`;}
-$('loadOdds').onclick=async()=>{const sport=getSport();if(!sport){message('Especifica el deporte o torneo.',true);return;}const data=await load('odds',{sport});if(!data)return;$('mOdds').textContent=data.eventCount??'—';$('mQuota').textContent=data.quota?.remaining??'—';const events=Array.isArray(data.events)?data.events:[];$('oddsEvents').innerHTML=events.length?events.slice(0,100).map(oddsCard).join(''):'<div class="empty" style="grid-column:1/-1">Sin eventos o cuotas para este deporte. No implica que el sistema esté averiado.</div>';};
-$('loadConsensus').onclick=async()=>{const sport=getSport();const data=await load('consensus',{sport});if(!data)return;const events=Array.isArray(data.events)?data.events:[];$('consensusResults').innerHTML=events.length?events.slice(0,60).map(e=>{const outcomes=Array.isArray(e.outcomes)?e.outcomes:[];return `<article class="game"><div class="meta"><span class="tag warn">CONSENSO NO VALIDADO</span><span>${enc(e.bookmakers??0)} casas comparables</span></div><h4>${enc(e.matchup||'Encuentro')}</h4>${outcomes.map(o=>`<div class="quote" style="margin-top:7px"><span>${enc(o.selection)}</span><b>${enc(o.marketConsensusPercent)}%</b><small>${enc(o.bestPriceComparison?.bookmaker||'Sin comparación')} ${o.bestPriceComparison? ' · discrepancia teórica '+enc(o.bestPriceComparison.theoreticalEVPercent)+'%':''}</small></div>`).join('')}<p class="hint">${enc(e.decision||'NO_BET')} · Referencia de mercado, no predicción independiente.</p></article>`;}).join(''):'<div class="empty" style="grid-column:1/-1">No hay consenso disponible en este período.</div>';};
-</script>
-</body>
-</html>
+</body></html>
