@@ -25,6 +25,9 @@ html,body{max-width:100%;overflow-x:hidden}main,.header,.card,.metrics,.metric,.
 .bad{color:#e8cda3}
 #results{max-width:100%;overflow-wrap:anywhere}
 @media(max-width:640px){.statusGrid{grid-template-columns:minmax(0,1fr)}.card{padding:16px}.kv{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.k,.v{overflow-wrap:anywhere}}
+.playMode{margin-top:14px;padding:14px;border:1px solid #555;border-radius:15px;background:#111}
+.playMode strong{color:#fff} .playMode p{margin:7px 0 0;font-size:13px;color:#bcbcbc}
+.metric b{font-size:clamp(13px,3.4vw,20px)!important;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -49,14 +52,14 @@ html,body{max-width:100%;overflow-x:hidden}main,.header,.card,.metrics,.metric,.
   </section>
 
   <section class="card">
-    <span class="pill">ANALYSIS CONTROL</span>
+    <span class="pill">PICKS CONTROL</span><div class="playMode"><strong>HYDRAX TOP PLAYS · Cuotas mínimas -400</strong><p>Clasificación de opciones con retorno posible. Sin cuotas frescas o partidos, no se inventan picks. El modelo puede no tener validación estadística.</p></div>
     <div class="metrics">
       <div class="metric"><small>Predicción</small><b id="predType">—</b></div>
       <div class="metric"><small>Eventos encontrados</small><b id="eventsCount">—</b></div>
       <div class="metric"><small>Modelo</small><b id="modelName">—</b></div>
     </div>
     <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
-      <button id="run" class="primary">ANALYZE TODAY'S GAMES</button>
+      <button id="run" class="primary">GENERATE TOP PLAYS · -400</button>
       <a class="navbtn" href="./tracker.html">OPEN BET TRACKER</a>
     </div>
     <div id="state" class="status">Selecciona un deporte y ejecuta el análisis.</div>
@@ -80,7 +83,7 @@ const sports=[["UFC","🥊"],["ATP","🎾"],["WTA","🎾"],["NBA","🏀"],["NFL"
 let current="UFC", token=0;
 const $=id=>document.getElementById(id);
 const fmtPct=v=>typeof v==='number' && isFinite(v)? `${v.toFixed(2)}%` : '—';
-const displayModel=v=>prettyStatus(v)+' · NO BET';
+const displayModel=v=>prettyStatus(v)+' · TOP PLAYS';
 const prettyStatus=s=>({
   DATA_UNAVAILABLE:'Estadísticas no disponibles',RESEARCH_ESTIMATE:'Estimación experimental',
   NO_INDEPENDENT_DATA:'Sin datos independientes',INSUFFICIENT_HISTORY:'Historial insuficiente',
@@ -102,36 +105,44 @@ function renderSports(){
 function line(label, value){ const row=el('div','kv'); row.append(el('div','k',label), el('div','v', value)); return row; }
 function pickCard(pick){
   const card=el('article','pick');
-  card.append(el('span','pill',`${pick.sport||current} · ${pick.bookmaker||'Book'}`));
-  card.append(el('h3','',pick.event||'Evento'));
+  const rank=typeof pick.rank==='number'?'#'+pick.rank+' · ':'';
+  card.append(el('span','pill',rank+(pick.sport||current)+' · '+(pick.bookmaker||'Casa')));
+  card.append(el('h3','',pick.event||'Encuentro'));
   card.append(el('div','selection',pick.selection||'Selección'));
-
-  const left=el('div','subbox'); left.append(el('h4','', 'MARKET VIEW'));
-  left.append(line('Cuota', fmtOdds(pick.odds)));
-  left.append(line('Prob. consenso', fmtPct(pick.probabilityPercent)));
-  left.append(line('Monte Carlo mercado', fmtPct(pick.simulatedPercent)));
-  left.append(line('EV teórico', fmtPct(pick.evPercent)));
-  left.append(line('Dispersión entre casas (NO riesgo total)', pick.risk||'—'));
-  left.append(line('Inicio', pick.startsAt ? fmtStart(pick.startsAt) : '—'));
-
+  const profit=Number(pick.possibleProfit25),capital=25;
+  const market=el('div','subbox');
+  market.append(el('h4','', 'SELECCIÓN Y RETORNO'));
+  market.append(line('Cuota disponible',fmtOdds(pick.odds)));
+  market.append(line('Casa de apuestas',pick.bookmaker||'—'));
+  market.append(line('Ganancia posible con $25',Number.isFinite(profit)?'$'+profit.toFixed(2):'—'));
+  market.append(line('Cobro total si acierta',typeof pick.possibleReturn25==='number'?'$'+pick.possibleReturn25.toFixed(2):'—'));
+  market.append(line('Pérdida si falla','-$'+capital.toFixed(2)));
+  market.append(line('Probabilidad de mercado',fmtPct(pick.probabilityPercent)));
+  market.append(line('Probabilidad de perder',fmtPct(pick.lossProbabilityPercent)));
+  market.append(line('EV teórico del consenso',fmtPct(pick.evPercent)));
+  market.append(line('Calidad de fuente',prettyStatus(pick.dataQuality)));
+  market.append(line('Casas comparadas',String(pick.peerBookmakerCount??'Sin confirmar')));
+  market.append(line('Cuota observada',pick.priceUpdatedAt?fmtStart(pick.priceUpdatedAt)+' PR':'Fecha no disponible'));
+  market.append(line('Hora del partido',pick.startsAt?fmtStart(pick.startsAt):'—'));
   const im=pick.independentModel||{};
-  const right=el('div','subbox'); right.append(el('h4','', 'INDEPENDENT MODEL'));
-  const readableStatus={DATA_UNAVAILABLE:'DATOS NO DISPONIBLES',RESEARCH_ESTIMATE:'ESTIMACIÓN EXPERIMENTAL',UNMATCHED_TEAMS:'EQUIPOS NO VERIFICADOS',INSUFFICIENT_HISTORY:'HISTORIAL INSUFICIENTE',UNAVAILABLE:'MODELO NO DISPONIBLE',UNMATCHED_SELECTION:'SELECCIÓN NO IDENTIFICADA'};
-  right.append(line('Estado', prettyStatus(im.status)));
-  right.append(line('Prob. modelo', fmtPct(im.probabilityPercent)));
-  right.append(line('EV modelo', fmtPct(im.expectedValuePercent)));
-  right.append(line('Muestra histórica', (im.homeGames!=null && im.awayGames!=null) ? `${im.homeGames} / ${im.awayGames} games` : '—'));
-  right.append(line('Fuente', im.source || im.statistic || '—'));
-  if(im.sourceError) right.append(line('Diagnóstico de fuente',im.sourceError));
-  if(im.statsDiscoverySource) right.append(line('Identificación equipos',im.statsDiscoverySource));
-  right.append(line('Decisión', im.decision==='NO_BET'?'NO BET — falta validación':(im.decision||'—')));
-
-  const split=el('div','split'); split.append(left,right); card.append(split);
-
-  const note=el('p','warn', (im.reason?`Independent model: ${im.reason}. `:'') + 'HYDRAX separa market view de estimación independiente. Usa criterio y valida lesiones, lineups y contexto antes de apostar.');
-  card.append(note);
+  const model=el('div','subbox');
+  model.append(el('h4','', 'MODELO INDEPENDIENTE'));
+  model.append(line('Estado',prettyStatus(im.status)));
+  model.append(line('Probabilidad experimental',fmtPct(im.probabilityPercent)));
+  model.append(line('EV experimental',fmtPct(im.expectedValuePercent)));
+  if(im.modelVersion)model.append(line('Versión',im.modelVersion));
+  if(im.homeGames!=null&&im.awayGames!=null)model.append(line('Muestra previa',im.homeGames+' / '+im.awayGames));
+  if(im.source)model.append(line('Estadísticas',im.source));
+  if(im.sourceError)model.append(line('Fuente inaccesible',im.sourceError));
+  model.append(line('Validación',im.validated===true?'Documentada':'No validada'));
+  const split=el('div','split');split.append(market,model);card.append(split);
+  let caution='Selección clasificada para evaluación manual; el ranking no garantiza ganar.';
+  if(pick.dataQuality==='LEGACY_CACHE_NO_CONSENSUS')caution='Cuota guardada anteriormente: no hay consenso ni EV fiable. Confirma que siga disponible.';
+  else if(pick.dataQuality==='FUENTE_UNICA')caution='Una sola casa disponible. El consenso y EV no están contrastados de manera independiente.';
+  card.append(el('p','warn',caution));
   return card;
 }
+
 async function run(){
   const local=++token; const sport=current; const btn=$('run'); btn.disabled=true;
   $('state').textContent=`Consultando ${sport}...`; $('results').innerHTML='';
@@ -143,13 +154,13 @@ async function run(){
     $('predType').textContent=displayModel(data.predictionType||'—');
     $('eventsCount').textContent=data.eventsCount ?? '—';
     $('modelName').textContent='Forma reciente · Experimental';
-    $('state').textContent=`${data.eventsCount ?? 0} eventos · ${(data.picks||[]).length} candidatos · ${data.fromCache ? 'datos en caché' : 'consulta fresca'} · ${data.retrievedAt || ''}`;
+    $('state').textContent=`${data.eventsCount ?? 0} eventos · ${(data.picks||[]).length} selecciones · ${data.fromCache ? 'datos en caché' : 'consulta fresca'} · ${data.retrievedAt || ''}`;
     const results=$('results');
     if(data.modelValidation){
        const d=data.modelValidation;
        const a=el('div','audit');a.append(el('strong','', 'VALIDACIÓN Y CONTROL DE CAPITAL'));
        a.append(el('div','status', 'Backtesting: '+prettyStatus(d.status)+' · Muestra: '+(d.backtestN??0)+' · Brier: '+(d.brierScore==null?'No calculado':d.brierScore)));
-       a.append(el('div','warn','NO BET · No se registran apuestas ni se ejecutan stakes automáticamente.'));
+       a.append(el('div','warn','NO BET · Las apuestas solo se registran por acción manual.'));
        results.append(a);
     }
     if(data.playerAvailability){
@@ -166,7 +177,7 @@ async function run(){
       data.picks.forEach(p=>results.append(pickCard(p)));
     }
     if(Array.isArray(data.events) && data.events.length){
-      const heading=el('div',''); heading.append(el('h2','', 'ESTUDIOS DE PARTIDOS'),el('p','status','Hasta cinco encuentros por deporte con evidencia, disponibilidad y estado del modelo. NO BET no significa que el encuentro esté descartado del análisis.'));
+      const heading=el('div',''); heading.append(el('h2','', 'ESTUDIOS DE PARTIDOS'),el('p','status','Hasta cinco encuentros por deporte con evidencia, disponibilidad y estado del modelo. Los partidos aparecen aunque no haya opciones clasificadas.'));
       results.append(heading);
       for(const ev of data.events){
         const card=el('article','pick');
@@ -192,7 +203,7 @@ async function run(){
         if(m.source)block.append(line('Estadísticas',m.source));
         if(m.reason)block.append(line('Limitación',m.reason));
         if(m.sourceError)block.append(line('Fuente fallida',m.sourceError));
-        block.append(line('Decisión','NO BET — modelo no calibrado; lesiones y lineups sin verificar'));
+        block.append(line('Estado','Partido observado · modelo y lineups sin validar'));
         card.append(block); results.append(card);
       }
       if(data.eventsTruncated) results.append(el('p','status','Mostrando cinco encuentros priorizados; existen más eventos en la fuente.'));
@@ -202,7 +213,7 @@ async function run(){
       results.append(el('p','status','Fuente cuotas: '+data.sourceQuality.market+' · Consultadas: '+stamp+' (PR). Las cuotas pueden cambiar; confirma en tu sportsbook.'));
     }
     if(data.warning) results.append(el('p','warn','Nota: '+data.warning));
-    results.append(el('p','warn','Modelo experimental: aún sin calibración ni backtesting validado. No representa una recomendación de apuesta.'));
+    results.append(el('p','warn','Modelo experimental: falta calibración y backtesting; el ranking no garantiza rendimiento ni ganancia.'));
   } catch(err){
     if(local!==token) return;
     $('state').textContent='Consulta no disponible';
