@@ -286,6 +286,19 @@ async function synchronize(userId:string|null) {
 Deno.serve(async (req:Request)=>{
   if(req.method==="OPTIONS")return new Response(null,{status:204,headers:JSON_HEADERS});
   if(req.method==="GET"){
+    if(new URL(req.url).searchParams.get("check")==="logic"){
+      const game={id:"unit-test-event",completed:true,home_team:"Home",away_team:"Away",
+        scores:[{name:"Home",score:"105"},{name:"Away",score:"100"}]};
+      const sample={home_name:"Home",away_name:"Away",selection:"Home"};
+      const cases={
+        won:outcome(game,sample)==="won",
+        lost:outcome(game,{...sample,selection:"Away"})==="lost",
+        pending:outcome({...game,completed:false},sample)==="pending",
+        draw_review:outcome({...game,scores:[{name:"Home",score:"100"},{name:"Away",score:"100"}]},sample)==="review",
+        mismatch_review:outcome({...game,home_team:"Wrong"},sample)==="review"
+      };
+      return json(Object.values(cases).every(Boolean)?200:500,{ok:Object.values(cases).every(Boolean),module:"HYDRAX LOGIC SMOKE",cases});
+    }
     if(new URL(req.url).searchParams.get("check")==="provider"){
       try{const d=await provider("/sports/");return json(200,{ok:true,module:"HYDRAX AUTO SETTLEMENT v1",provider_verified:true,available_sports:Array.isArray(d.payload)?d.payload.length:null});}
       catch(e){return json(503,{ok:false,provider_verified:false,error:String(e instanceof Error?e.message:e)});}
