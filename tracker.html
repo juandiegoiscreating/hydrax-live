@@ -62,19 +62,31 @@ button:disabled{opacity:.45;cursor:wait}
 .actions button{width:auto;font-size:12px}
 .hidden{display:none}
 #message{padding:10px;color:var(--green);white-space:pre-wrap}
+
+/* Unified HYDRAX black / white-neon theme */
+:root{--bg:#050505;--panel:#101010;--line:#363636;--green:#fff;--text:#f7f7f7;--muted:#bfbfbf}
+body{background:radial-gradient(circle at top,#171717 0,#050505 46%,#000 100%)}
+input,select{background:#0a0a0a;border:1px solid #444}
+.metric{background:#090909;border:1px solid #303030}
+button{background:#fff;color:#000}
+.secondary{background:#1b1b1b;color:#fff;border:1px solid #4b4b4b}
+.accent{color:#fff;text-shadow:0 0 12px #ffffff55}
+.card{box-shadow:0 18px 32px #0006}
+#bankroll{color:#fff}
+@media(max-width:580px){.stats,.grid{grid-template-columns:minmax(0,1fr)}main{padding:15px}}
 </style>
 </head>
 <body>
 <main>
 <header>
   <small class="accent">SPORTS INTELLIGENCE TERMINAL</small>
-  <h1>HYDRAX <span class="accent">REBIRTH</span></h1>
-  <small>BET TRACKER · TEST BUILD</small>
+  <h1>HYDRAX <span class="accent">by JD</span></h1>
+  <small>BET TRACKER · CAPITAL CONTROL · CAESARS</small>
 </header>
 
 <p id="message"></p>
 
-<section id="setup" class="card">
+<section id="setup" class="card hidden">
 <h2>Configuración inicial</h2>
 <p class="muted">
 Introduce la URL y la clave pública de Supabase.
@@ -120,6 +132,22 @@ Nunca uses service_role ni secret keys.
   <div class="metric"><small>Yield / ROI sobre stake liquidado</small><strong id="yield">—</strong></div>
   <div class="metric"><small>Win rate</small><strong id="winrate">—</strong></div>
   <div class="metric"><small>Pendientes</small><strong id="pending">0</strong></div>
+</div>
+</section>
+
+<section class="card">
+<h2>Capital de seguimiento</h2>
+<p class="muted">Capital teórico para seguimiento; no equivale a fondos confirmados de Caesars. Los valores se guardan en este navegador.</p>
+<div class="grid">
+<div><label for="capitalSeed">Capital inicial ($)</label><input id="capitalSeed" type="number" min="0" step=".01" value="400"></div>
+<div><label for="unitSize">Unidad de seguimiento ($)</label><input id="unitSize" type="number" min=".01" step=".01" value="25"></div>
+</div>
+<button class="secondary" id="saveCapital">Guardar parámetros</button>
+<div class="stats" style="margin-top:16px">
+<div class="metric"><small>Capital libre estimado</small><strong id="bankroll">$400.00</strong></div>
+<div class="metric"><small>Stakes pendientes</small><strong id="lockedCapital">$0.00</strong></div>
+<div class="metric"><small>Exposición / capital inicial</small><strong id="exposure">0.00%</strong></div>
+<div class="metric"><small>Unidad configurada</small><strong id="unitReadout">$25.00</strong></div>
 </div>
 </section>
 
@@ -178,7 +206,34 @@ Nunca uses service_role ni secret keys.
 import {createClient} from
 "https://esm.sh/@supabase/supabase-js@2";
 
+const DEFAULT_URL="https://acpwxupqpbyesbhuixkq.supabase.co";
+const DEFAULT_KEY="sb_publishable_9MEM0vRtaqMMaTIewFH1NA_b4AG0OH7";
 const $=id=>document.getElementById(id);
+let trackerSummary=null;
+const capitalValue=(key,fallback)=>{const v=Number(localStorage.getItem(key));return Number.isFinite(v)&&v>=0?v:fallback};
+function paintCapital(){
+ const principal=capitalValue("hydrax_seed_capital",400);
+ const unit=capitalValue("hydrax_unit_size",25)||25;
+ $("capitalSeed").value=principal;
+ $("unitSize").value=unit;
+ const s=trackerSummary||{};
+ const locked=Math.max(0,Number(s.total_staked||0)-Number(s.settled_staked||0));
+ const free=principal+Number(s.net_profit||0)-locked;
+ $("bankroll").textContent=money(free);
+ $("lockedCapital").textContent=money(locked);
+ $("exposure").textContent=principal>0?(100*locked/principal).toFixed(2)+"%":"—";
+ $("unitReadout").textContent=money(unit);
+ $("stake").value=unit;
+ potential();
+}
+$("saveCapital").onclick=()=>{
+ const principal=Number($("capitalSeed").value),unit=Number($("unitSize").value);
+ if(!Number.isFinite(principal)||principal<0||!Number.isFinite(unit)||unit<=0||!Number.isInteger(Math.round(unit*100))||unit>principal&&principal>0)
+   return msg("Revisa el capital inicial y la unidad (debe ser mayor que cero y no exceder el capital).");
+ localStorage.setItem("hydrax_seed_capital",String(principal));
+ localStorage.setItem("hydrax_unit_size",String(unit));
+ paintCapital();msg("Parámetros de seguimiento guardados en este dispositivo.");
+};
 let sb=null;
 let offset=0;
 const pageSize=30;
@@ -205,8 +260,8 @@ $("stake").oninput=potential;
 $("odds").oninput=potential;
 
 async function initialize(){
-  const url=localStorage.getItem("hydrax_url");
-  const key=localStorage.getItem("hydrax_key");
+  const url=localStorage.getItem("hydrax_url")||DEFAULT_URL;
+  const key=localStorage.getItem("hydrax_key")||DEFAULT_KEY;
   if(!url||!key){
     show("setup",true);
     return;
@@ -311,6 +366,8 @@ $("register").onclick=async()=>{
   }
   button.disabled=true;
   try{
+    const confirmed=confirm("¿Registrar esta apuesta en HYDRAX? No la coloca en Caesars.\\n"+payload.selection+" | "+money(stake)+" | "+(american_odds>0?"+":"")+american_odds);
+    if(!confirmed)return;
     await invoke(payload);
     $("eventName").value="";
     $("selection").value="";
@@ -327,11 +384,14 @@ async function refresh(){
 
 async function loadSummary(){
   try{
-    const data=await invoke({
-      action:"summary",
-      sport:$("filter").value||null
-    });
+    const sport=$("filter").value||null;
+    const [data,overall]=await Promise.all([
+      invoke({action:"summary",sport}),
+      sport?invoke({action:"summary",sport:null}):Promise.resolve(null)
+    ]);
     const s=data.summary||{};
+    trackerSummary=(overall?.summary||s);
+    paintCapital();
     $("won").textContent=s.won||0;
     $("lost").textContent=s.lost||0;
     $("pending").textContent=s.pending||0;
@@ -401,6 +461,7 @@ async function settle(id,status){
 
 $("filter").onchange=refresh;
 $("more").onclick=()=>loadBets(false);
+paintCapital();
 initialize();
 </script>
 </body>
