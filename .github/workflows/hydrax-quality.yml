@@ -91,3 +91,35 @@ jobs:
           }
           console.log("NBA_LIVE_SMOKE_OK",{events:data.eventsCount,picks:data.picks.length,fromCache:data.fromCache});
           JS
+
+      - name: One-time full sports verification
+        if: github.event.head_commit.message == 'HYDRAX one-time eight-sport QA'
+        run: |
+          node --input-type=module - <<'JS'
+          const sports=["UFC","ATP","WTA","NBA","NFL","MLB","NCAAB","NCAAF"];
+          const url="https://acpwxupqpbyesbhuixkq.supabase.co/functions/v1/hydrax-public-intelligence";
+          const findings=[];
+          for(const sport of sports){
+            try {
+              const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},
+                body:JSON.stringify({sport}),signal:AbortSignal.timeout(65000)});
+              const d=await r.json();
+              if(r.status===429&&d.error==="DAILY_SOURCE_LIMIT"){
+                findings.push({sport,status:"QUOTA_LIMIT",picks:0});
+                continue;
+              }
+              if(!r.ok||d.ok!==true||d.sport!==sport||!Array.isArray(d.picks))throw Error("HTTP "+r.status+" "+JSON.stringify(d).slice(0,500));
+              if(d.modelCacheVersion!==12)throw Error("Incorrect model cache version");
+              const now=Date.now();
+              for(const p of d.picks){
+                const quote=Date.parse(p.priceUpdatedAt||"");
+                const starts=Date.parse(p.startsAt||"");
+                if(!Number.isFinite(quote)||now-quote>30*60000||quote>now+120000||starts<=now||p.odds<-400)throw Error("Unsafe quote");
+              }
+              findings.push({sport,status:"OK",events:d.eventsCount,picks:d.picks.length,notes:d.warning?.slice(0,100)});
+            }catch(e){findings.push({sport,status:"ERROR",error:String(e)});}
+          }
+          console.log(JSON.stringify(findings,null,2));
+          const failures=findings.filter(x=>x.status==="ERROR");
+          if(failures.length)throw Error("Incomplete sports verification: "+failures.map(x=>x.sport).join(","));
+          JS
