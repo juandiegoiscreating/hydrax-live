@@ -67,6 +67,14 @@ jobs:
           console.log({service:j.service,modelVersion:j.modelVersion,modelAudit:j.modelAudit?.status});
           JS
 
+      - name: Verify deployed deterministic model guards
+        run: |
+          node --input-type=module - <<'JS'
+          const r=await fetch("https://acpwxupqpbyesbhuixkq.supabase.co/functions/v1/hydrax-public-intelligence?selftest=1",{signal:AbortSignal.timeout(15000)});
+          const data=await r.json();
+          if(!r.ok||data.ok!==true||!data.selftest||Object.values(data.selftest).some(v=>v!==true))throw Error("Model guard selftest failed: "+JSON.stringify(data));
+          console.log("HYDRAX_V13_SELFTEST_OK",data.selftest);
+          JS
       - name: Live NBA research smoke (never places wagers)
         run: |
           node --input-type=module - <<'JS'
