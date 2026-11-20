@@ -87,7 +87,7 @@ async function inputLegs(value:unknown) {
   if(groups.size>10) throw new Error("Demasiados torneos");
   const eventLookup=new Map<string,any>();
   for(const key of groups.keys()){
-    const {payload}=await provider("/sports/"+encodeURIComponent(key)+"/events/");
+    const {payload}=await provider("/sports/"+encodeURIComponent(key)+"/events");
     if(!Array.isArray(payload)) throw new Error("Formato de eventos inesperado");
     for(const e of payload) {
       if(typeof e?.id==="string") eventLookup.set(key+"|"+e.id,e);
@@ -285,7 +285,13 @@ async function synchronize(userId:string|null) {
 }
 Deno.serve(async (req:Request)=>{
   if(req.method==="OPTIONS")return new Response(null,{status:204,headers:JSON_HEADERS});
-  if(req.method==="GET")return json(200,{ok:true,module:"HYDRAX AUTO SETTLEMENT v1",live:true,markets:["h2h"],api_configured:!!ODDS_KEY,background_job_supported:true});
+  if(req.method==="GET"){
+    if(new URL(req.url).searchParams.get("check")==="provider"){
+      try{const d=await provider("/sports/");return json(200,{ok:true,module:"HYDRAX AUTO SETTLEMENT v1",provider_verified:true,available_sports:Array.isArray(d.payload)?d.payload.length:null});}
+      catch(e){return json(503,{ok:false,provider_verified:false,error:String(e instanceof Error?e.message:e)});}
+    }
+    return json(200,{ok:true,module:"HYDRAX AUTO SETTLEMENT v1",live:true,markets:["h2h"],api_configured:!!ODDS_KEY,background_job_supported:true});
+  }
   if(req.method!=="POST")return json(405,{ok:false,error:"POST_REQUIRED"});
   if(!admin)return json(503,{ok:false,error:"SERVER_CONFIGURATION_MISSING"});
   let body:Obj;
@@ -316,7 +322,7 @@ Deno.serve(async (req:Request)=>{
     if(action==="events") {
       const key=String(body.sport_key||"");
       if(!matchSport(key))return json(400,{ok:false,error:"SPORT_NOT_SUPPORTED"});
-      const {payload}=await provider("/sports/"+encodeURIComponent(key)+"/events/");
+      const {payload}=await provider("/sports/"+encodeURIComponent(key)+"/events");
       if(!Array.isArray(payload))throw new Error("INVALID_EVENTS_PAYLOAD");
       return json(200,{ok:true,events:payload.slice(0,200)
         .filter(e=>typeof e.id==="string"&&typeof e.away_team==="string"&&typeof e.home_team==="string")
