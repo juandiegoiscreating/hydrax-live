@@ -210,7 +210,7 @@ const DEFAULT_URL="https://acpwxupqpbyesbhuixkq.supabase.co";
 const DEFAULT_KEY="sb_publishable_9MEM0vRtaqMMaTIewFH1NA_b4AG0OH7";
 const $=id=>document.getElementById(id);
 let trackerSummary=null;
-const capitalValue=(key,fallback)=>{const v=Number(localStorage.getItem(key));return Number.isFinite(v)&&v>=0?v:fallback};
+const capitalValue=(key,fallback)=>{const raw=localStorage.getItem(key);if(raw===null)return fallback;const v=Number(raw);return Number.isFinite(v)&&v>=0?v:fallback};
 function paintCapital(){
  const principal=capitalValue("hydrax_seed_capital",400);
  const unit=capitalValue("hydrax_unit_size",25)||25;
@@ -228,7 +228,7 @@ function paintCapital(){
 }
 $("saveCapital").onclick=()=>{
  const principal=Number($("capitalSeed").value),unit=Number($("unitSize").value);
- if(!Number.isFinite(principal)||principal<0||!Number.isFinite(unit)||unit<=0||!Number.isInteger(Math.round(unit*100))||unit>principal&&principal>0)
+ if(!Number.isFinite(principal)||principal<0||!Number.isFinite(unit)||unit<=0||Math.abs(unit*100-Math.round(unit*100))>0.000001||unit>principal&&principal>0)
    return msg("Revisa el capital inicial y la unidad (debe ser mayor que cero y no exceder el capital).");
  localStorage.setItem("hydrax_seed_capital",String(principal));
  localStorage.setItem("hydrax_unit_size",String(unit));
