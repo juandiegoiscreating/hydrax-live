@@ -9,6 +9,14 @@ Personal sports research terminal with black and neon-white theme. **No automati
 
 Intelligence is passwordless; Supabase secrets stay server-side. The bet registry is authenticated and user-specific.
 
+## Release status — HYDRAX v13 (2026-11-19)
+- **Backend:** Supabase Edge Function deployment revision 14, model cache schema v13, with current-market quote validation before returning any ranked selections. Snapshots are never silently promoted to fresh picks.
+- **Quotes:** prices older than 30 minutes, future-dated beyond two minutes, from earlier dates, or for started events are filtered when a response is delivered; the daily free-provider request quota may produce an empty valid response.
+- **ESPN schedule parser:** recognizes completion at competition or event status; handles Los Angeles / LA alias variants. These are correctness fixes, not evidence of predictive accuracy.
+- **Tracker:** auto-configures the current Supabase public client key on a fresh browser, retains login for private data, uses black/white neon UI and tracks simulated free capital from configured starting capital (default $400), net settled profit and stakes pending. A tracking unit defaults to $25. Capital settings are stored **per browser** and are not sportsbook account balances.
+- **Verification:** GitHub Actions checks the front-end JavaScript, tracker module, stale-quote invariants, backtest script syntax, GET API health, an NBA research POST, and deterministic Edge Function self-tests. An eight-sport one-time smoke exercised all sport endpoints; a zero-event response is not evidence that a sport is permanently unavailable.
+- **Limitations:** full source coverage, holdout calibration, injury/lineup status, point-in-time sportsbook history and historical EV/ROI are not verified. Model indicators remain **NOT VALIDATED**; no direct betting automation.
+
 ## Sport-by-sport model readiness
 - NBA and NCAAB: experimental recent score-margin probability simulations. No confirmed injuries/lineups.
 - NFL and NCAAF: experimental score-margin simulations using separate football variance assumptions; uncalibrated.
