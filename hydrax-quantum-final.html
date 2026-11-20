@@ -28,6 +28,20 @@ html,body{max-width:100%;overflow-x:hidden}main,.header,.card,.metrics,.metric,.
 .playMode{margin-top:14px;padding:14px;border:1px solid #555;border-radius:15px;background:#111}
 .playMode strong{color:#fff} .playMode p{margin:7px 0 0;font-size:13px;color:#bcbcbc}
 .metric b{font-size:clamp(13px,3.4vw,20px)!important;overflow-wrap:anywhere}
+/* Mobile-first expandable research rows */
+details.event-preview{padding:0;overflow:hidden}
+details.event-preview>summary{display:block;list-style:none;cursor:pointer;padding:16px 15px;outline-offset:-3px}
+details.event-preview>summary::-webkit-details-marker{display:none}
+.event-title{font-size:clamp(17px,4vw,22px)!important;line-height:1.26!important;margin:10px 0!important;font-weight:850;overflow-wrap:break-word}
+.event-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:#bcbcbc;font-size:12px;line-height:1.5}
+.event-status{font-size:12px;display:inline-block;margin-top:9px;color:#c7c7c7}
+.event-toggle{float:right;color:#fff;border:1px solid #555;border-radius:9px;padding:5px 9px;font-size:12px;font-weight:800;margin-left:8px}
+details[open] .event-toggle{border-color:#999}
+details.event-preview>.event-details{margin:0 12px 14px}
+.event-preview .kv{font-size:13px;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:8px}
+.event-preview .v{text-align:right;overflow-wrap:anywhere}
+.event-preview .subbox{padding:11px}
+@media(max-width:640px){.pick{padding:12px}.event-preview .kv{grid-template-columns:minmax(0,1fr) minmax(0,1.12fr)}.event-preview .v{font-size:12px}}
 </style>
 </head>
 <body>
@@ -182,31 +196,48 @@ async function run(){
       const heading=el('div',''); heading.append(el('h2','', 'ESTUDIOS DE PARTIDOS'),el('p','status','Hasta cinco encuentros por deporte con evidencia, disponibilidad y estado del modelo. Los partidos aparecen aunque no haya opciones clasificadas.'));
       results.append(heading);
       for(const ev of data.events){
-        const card=el('article','pick');
-        card.append(el('span','pill', ev.status==='MARKET_DATA_AVAILABLE'?'DATOS DE MERCADO':'CUOTAS INSUFICIENTES'));
-        card.append(el('h3','',ev.event||'Encuentro sin identificar'));
-        const block=el('div','subbox');
+        const card=el('details','pick event-preview');
+        const summary=el('summary','');
+        const badge=el('span','pill',ev.status==='MARKET_DATA_AVAILABLE'?'CUOTAS DISPONIBLES':'CUOTAS LIMITADAS');
+        const toggle=el('span','event-toggle','Ver detalles +');
+        summary.append(toggle,badge);
+        summary.append(el('h3','event-title',ev.event||'Encuentro sin identificar'));
+        const meta=el('div','event-meta');
+        meta.append(el('span','',ev.startsAt?fmtStart(ev.startsAt)+' PR':'Fecha sin confirmar'));
+        meta.append(el('span','',String(ev.recentBookmakerCount??0)+' casas recientes'));
+        if(Array.isArray(ev.bestPrices)&&ev.bestPrices.length){
+          const quotes=ev.bestPrices.slice(0,2).map(x=>x.team+' '+fmtOdds(x.odds));
+          meta.append(el('span','',quotes.join(' · ')));
+        }
+        summary.append(meta);
+        const m=ev.independentModel||{};
+        const ready=m.status==='RESEARCH_ESTIMATE';
+        const modelLabel=ready?'Modelo experimental disponible · sin validar':m.status==='UNMATCHED_TEAMS'?'Modelo pendiente · nombres no conciliados':m.status==='INSUFFICIENT_HISTORY'?'Modelo pendiente · historial insuficiente':'Modelo sin validar · '+prettyStatus(m.status||'UNAVAILABLE');
+        summary.append(el('div','event-status',modelLabel));
+        card.append(summary);
+        const block=el('div','subbox event-details');
         block.append(line('Comienzo (PR)',fmtStart(ev.startsAt)));
         block.append(line('Casas disponibles',String(ev.bookmakerCount??0)));
         block.append(line('Casas recientes',String(ev.recentBookmakerCount??0)));
         if(Array.isArray(ev.bestPrices)&&ev.bestPrices.length){
-          for(const x of ev.bestPrices) block.append(line('Mejor cuota observada',x.team+' '+fmtOdds(x.odds)+' · '+(x.bookmaker||'Casa')+' · '+(x.updatedAt?fmtStart(x.updatedAt):'hora no verificada')));
+          for(const x of ev.bestPrices)block.append(line('Mejor cuota · '+(x.team||'Equipo'),fmtOdds(x.odds)+' · '+(x.bookmaker||'Casa')+' · '+(x.updatedAt?fmtStart(x.updatedAt):'hora no verificada')));
         }
-        const m=ev.independentModel||{};
         block.append(line('Modelo',prettyStatus(m.status||'UNAVAILABLE')));
         if(typeof m.probabilityPercent==='number')block.append(line('Probabilidad experimental · local',fmtPct(m.probabilityPercent)));
         if(typeof m.expectedMargin==='number')block.append(line('Margen estimado local',String(m.expectedMargin)));
-        if(m.homeGames!=null)block.append(line((current==='ATP'||current==='WTA')?'Historial (jugador A / B)':'Partidos usados (local / visitante)',m.awayGames+' / '+m.homeGames));
-        if(m.playerAFormLast10!=null && m.playerBFormLast10!=null)block.append(line('Forma últimos 10 (A / B)',m.playerAFormLast10+'/10 · '+m.playerBFormLast10+'/10'));
+        if(m.homeGames!=null)block.append(line((current==='ATP'||current==='WTA')?'Historial (jugador A / B)':'Partidos usados (local / visitante)',m.homeGames+' / '+m.awayGames));
+        if(m.playerAFormLast10!=null&&m.playerBFormLast10!=null)block.append(line('Forma últimos 10 (A / B)',m.playerAFormLast10+'/10 · '+m.playerBFormLast10+'/10'));
         if(m.modelVersion)block.append(line('Modelo específico',m.modelVersion));
         if(m.sourceLastTournamentDate)block.append(line('Último torneo documentado',m.sourceLastTournamentDate));
         if(m.sourceLicense)block.append(line('Licencia de datos',m.sourceLicense));
         if(m.matchupName)block.append(line('Cartelera confirmada',m.matchupName));
         if(m.source)block.append(line('Estadísticas',m.source));
-        if(m.reason)block.append(line('Limitación',m.reason));
+        if(m.reason)block.append(line('Limitación',prettyStatus(m.reason)));
         if(m.sourceError)block.append(line('Fuente fallida',m.sourceError));
-        block.append(line('Estado','Partido observado · modelo y lineups sin validar'));
-        card.append(block); results.append(card);
+        block.append(line('Validación','Modelo no calibrado · lesiones y alineaciones no verificadas'));
+        card.append(block);
+        card.addEventListener('toggle',()=>{toggle.textContent=card.open?'Ocultar −':'Ver detalles +';});
+        results.append(card);
       }
       if(data.eventsTruncated) results.append(el('p','status','Mostrando cinco encuentros priorizados; existen más eventos en la fuente.'));
     }
