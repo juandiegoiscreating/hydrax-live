@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HYDRAX | Auto Settlement</title><meta name="theme-color" content="#050505">
+<style>
+:root{color-scheme:dark;--bg:#050505;--card:#101010;--line:#343434;--muted:#b5b5b5;--text:#fff;--good:#86e6a5;--bad:#ff9999;--warn:#ffc66d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#202020,#070707 50%,#000);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif} main{max-width:980px;margin:0 auto;padding:20px 15px 70px}
+header{border-bottom:1px solid #333;padding:14px 0 22px} h1{font-size:34px;letter-spacing:.05em;margin:5px 0}h2{font-size:21px;margin:0 0 12px}h3{font-size:15px;margin:15px 0 10px}.muted,small{color:var(--muted);line-height:1.5} .eyebrow{font-size:11px;letter-spacing:.19em;font-weight:800;color:#ddd}
+.card{background:linear-gradient(180deg,#131313,#090909);border:1px solid var(--line);border-radius:20px;padding:20px;margin-top:16px;box-shadow:0 12px 35px #0007}
+nav{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}a{color:#fff}nav a{text-decoration:none;font-weight:650}
+button{padding:12px 15px;background:white;color:black;border:1px solid white;border-radius:11px;font-weight:750;cursor:pointer;font:inherit}button.secondary{background:#171717;border-color:#444;color:white}button:disabled{opacity:.45;cursor:wait}
+input,select{width:100%;padding:13px 12px;border-radius:10px;color:#fff;background:#0b0b0b;border:1px solid #444;font:inherit}
+label{display:block;font-size:13px;color:#bbb;margin-bottom:6px} .cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}.stack{display:grid;gap:13px}.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.metric{border:1px solid #383838;border-radius:12px;padding:13px;background:#0c0c0c}.metric b{display:block;font-size:22px;margin-top:4px}.ghost{background:#1c1c1c;color:#fff;border-color:#484848}
+.badge{display:inline-block;border:1px solid #666;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:750;letter-spacing:.04em}.won{color:var(--good);border-color:#43775a}.lost{color:var(--bad);border-color:#7e4545}.pending{color:#ddd}.review{color:var(--warn);border-color:#866232}.void{color:#c7ceff}.bet{padding:17px 0;border-top:1px solid #303030}.bet:first-child{border-top:0}.bet strong{font-size:16px}.leg{padding:9px 10px;border-left:2px solid #444;margin:7px 0;background:#0c0c0c}.leg p{margin:3px 0}.hidden{display:none!important}#message{min-height:26px;color:#f2f2f2;white-space:pre-wrap}.tiny{font-size:12px}#added .row{padding:10px;border:1px solid #383838;border-radius:10px;margin-bottom:7px}.note{border-left:2px solid #fff;padding:8px 12px;background:#161616;font-size:13px;line-height:1.5}
+@media(max-width:620px){.cols,.stats{grid-template-columns:1fr 1fr} main{padding:13px}h1{font-size:28px}.card{padding:16px}}
+</style></head>
+<body><main>
+<header><nav><div><div class="eyebrow">HYDRAX · SPORTS INTELLIGENCE BY JD</div><h1>AUTO SETTLEMENT</h1><small>VERIFIED BET MONITOR · CAESARS & MÁS</small></div><div><a href="./tracker.html">← Bet Tracker</a></div></nav></header>
+<p id="message" role="status" aria-live="polite"></p>
+<section id="auth" class="card hidden"><h2>Inicia sesión</h2><p class="muted">Utiliza la misma cuenta del Bet Tracker.</p>
+<div class="cols"><div><label for="email">Email</label><input id="email" type="email"></div><div><label for="password">Contraseña</label><input id="password" type="password"></div></div>
+<button id="login" style="margin-top:12px">Entrar</button></section>
+<div id="app" class="hidden">
+<section class="card"><div class="row"><div><h2>Estado de las apuestas</h2><small id="account"></small></div><div><button id="sync">Verificar resultados ahora</button> <button id="logout" class="secondary">Salir</button></div></div>
+<p class="muted tiny" id="lastSync">Pendiente de comprobación.</p>
+<div class="stats">
+<div class="metric"><small>Ganadas</small><b id="won">0</b></div>
+<div class="metric"><small>Perdidas</small><b id="lost">0</b></div>
+<div class="metric"><small>Pendientes</small><b id="pending">0</b></div>
+<div class="metric"><small>Profit neto</small><b id="profit">$0.00</b></div>
+</div></section>
+<section class="card"><h2>Registrar o conectar apuesta</h2><p class="muted">Selecciona el evento exacto y el ganador de cada partido. Moneyline (ganador del encuentro) es el mercado automático inicial. No conecta directamente con Caesars ni coloca apuestas.</p>
+<div class="stack">
+<div><label for="mode">Acción</label><select id="mode"><option value="create">Registrar apuesta nueva</option><option value="attach">Conectar apuesta pendiente existente</option></select></div>
+<div id="attachBox" class="hidden"><label for="existingBet">Apuesta pendiente en HYDRAX</label><select id="existingBet"><option value="">Elige la apuesta</option></select><p class="muted tiny">Se conserva su stake, cuota y bankroll. Si es parlay, agrega cada una de sus selecciones.</p></div>
+<div class="cols"><div><label for="sport">Deporte y torneo (disponibles hoy)</label><select id="sport"><option value="">Cargando torneos…</option></select></div><div><label for="event">Partido / combate</label><select id="event"><option value="">Selecciona un torneo</option></select></div></div>
+<div><label for="selection">Selección ganadora</label><select id="selection"><option value="">Selecciona un partido</option></select></div>
+<p class="muted tiny" id="eligibility"></p>
+<button id="addLeg" class="secondary">+ Añadir selección al ticket</button>
+<div><h3>Selecciones del ticket (<span id="legCount">0</span>)</h3><div id="added" class="muted">Todavía no hay selecciones.</div></div>
+<div id="newFields" class="cols"><div><label for="stake">Stake en dólares</label><input id="stake" type="number" min=".01" step=".01" value="10"></div><div><label for="odds">Cuota americana total</label><input id="odds" type="number" step="1" value="-110"></div><div><label for="sportsbook">Sportsbook</label><select id="sportsbook"><option>Caesars</option><option>Otro</option></select></div></div>
+<button id="saveBet">Guardar ticket con seguimiento</button>
+</div></section>
+<section class="card"><h2>Historial y comprobación por selección</h2><p class="muted">Los tickets antiguos sin eventos vinculados seguirán pendientes hasta que los conectes. Los resultados ambiguos exigen revisión; no se inventa una liquidación.</p><div id="bets">Cargando apuestas...</div></section>
+<section class="card"><div class="note"><b>Importante:</b> el estado mostrado se calcula a partir de resultados externos verificados. Puede diferir del resultado oficial de Caesars en retiros, descalificaciones, anulaciones, empates o reglas especiales. Los parlays con selecciones sin resultado claro permanecerán pendientes. Las liquidaciones confirmadas actualizan el profit automáticamente; no alteran el capital inicial guardado en tu navegador.</div></section>
+</div></main>
+<script type="module">
+import {createClient} from "https://esm.sh/@supabase/supabase-js@2.57.0";
+const $=id=>document.getElementById(id);
+const DEFAULT_URL="https://acpwxupqpbyesbhuixkq.supabase.co";
+const DEFAULT_KEY="sb_publishable_9MEM0vRtaqMMaTIewFH1NA_b4AG0OH7";
+const url=localStorage.getItem("hydrax_url")||DEFAULT_URL;
+const key=localStorage.getItem("hydrax_key")||DEFAULT_KEY;
+const sb=createClient(url,key);
+let events=[],legs=[],sports=[],session=null,lastRun=0,loading=false;
+const show=(id,v)=>$(id).classList.toggle("hidden",!v);
+const money=n=>"$"+Number(n||0).toFixed(2);
+const msg=s=>$("message").textContent=s;
+function opt(parent,value,label){const o=document.createElement("option");o.value=value;o.textContent=label;parent.append(o)}
+function clearSelect(id,placeholder){$(id).replaceChildren();opt($(id),"",placeholder)}
+function labelStatus(status){return ({won:"GANADA",lost:"PERDIDA",pending:"PENDIENTE",void:"VOID",review:"REVISIÓN"})[status]||status}
+async function api(body){
+ const {data,error}=await sb.functions.invoke("hydrax-auto-settlement",{body});
+ if(error){
+  let detail=error.message;
+  if(error.context instanceof Response){try{const j=await error.context.json();detail=j.error||detail}catch{}}
+  throw Error(detail);
+ }
+ if(!data?.ok)throw Error(data?.error||"Respuesta inválida");
+ return data;
+}
+async function signIn(){
+ const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+ if(error)return msg("Acceso: "+error.message);
+ session=data.session;await renderAuth();
+}
+$("login").onclick=signIn;
+$("logout").onclick=async()=>{await sb.auth.signOut();session=null;await renderAuth()};
+async function renderAuth(){
+ if(!session){show("auth",true);show("app",false);return}
+ show("auth",false);show("app",true);$("account").textContent=session.user.email||"Sesión privada";
+ await loadAll();
+}
+async function loadCatalog(){
+ const data=await api({action:"catalog"});
+ sports=data.sports||[];
+ clearSelect("sport","Selecciona un deporte / torneo");
+ for(const s of sports)opt($("sport"),s.key,s.sport+" · "+s.title+(s.auto_eligible?" · AUTO":" · REVISIÓN"));
+}
+$("sport").onchange=async()=>{
+ clearSelect("event","Cargando eventos");clearSelect("selection","Selecciona un partido");events=[];
+ const sport_key=$("sport").value;
+ const info=sports.find(s=>s.key===sport_key);
+ $("eligibility").textContent=info?.auto_eligible?"Resultados finales automáticos disponibles si el proveedor confirma un marcador válido.":"Este torneo no tiene resultados automáticos confirmados. Podrás registrar el ticket, pero necesitará revisión.";
+ if(!sport_key){clearSelect("event","Selecciona un torneo");return}
+ try{
+  const data=await api({action:"events",sport_key});
+  events=data.events||[];
+  clearSelect("event",events.length?"Selecciona un evento":"No hay eventos disponibles");
+  for(const e of events)opt($("event"),e.id,e.away_team+" vs "+e.home_team+" · "+new Date(e.starts_at).toLocaleString("es-PR"));
+ }catch(e){clearSelect("event","Error del proveedor");msg("Error de eventos: "+e.message)}
+};
+$("event").onchange=()=>{
+ clearSelect("selection","Selecciona al ganador");
+ const e=events.find(e=>e.id===$("event").value);
+ if(e){opt($("selection"),e.away_team,e.away_team);opt($("selection"),e.home_team,e.home_team)}
+};
+$("addLeg").onclick=()=>{
+ const key=$("sport").value,e=events.find(e=>e.id===$("event").value),selection=$("selection").value;
+ if(!key||!e||![e.home_team,e.away_team].includes(selection))return msg("Elige el torneo, partido y ganador.");
+ if(legs.length>=10)return msg("Máximo 10 selecciones por ticket.");
+ if(legs.some(l=>l.sport_key===key&&l.event_id===e.id))return msg("Esa selección ya está añadida.");
+ legs.push({sport_key:key,event_id:e.id,selection,event_name:e.away_team+" vs "+e.home_team});
+ renderLegs();msg("Selección añadida.");
+};
+function renderLegs(){
+ $("legCount").textContent=String(legs.length);
+ $("added").replaceChildren();
+ if(!legs.length){$("added").textContent="Todavía no hay selecciones.";return}
+ legs.forEach((l,i)=>{
+  const row=document.createElement("div");row.className="row";
+  const txt=document.createElement("small");txt.textContent=(i+1)+". "+l.selection+" · "+l.event_name;
+  const remove=document.createElement("button");remove.className="secondary";remove.textContent="Quitar";
+  remove.onclick=()=>{legs.splice(i,1);renderLegs()};row.append(txt,remove);$("added").append(row);
+ });
+}
+$("mode").onchange=()=>{const attach=$("mode").value==="attach";show("attachBox",attach);show("newFields",!attach)};
+async function loadUntracked(){
+ const data=await api({action:"pending_untracked"});
+ clearSelect("existingBet","Selecciona una apuesta pendiente");
+ for(const b of data.bets||[])opt($("existingBet"),b.id,b.bet_type.toUpperCase()+" · "+b.event_name+" · $"+b.stake);
+}
+$("saveBet").onclick=async()=>{
+ if(!legs.length)return msg("Añade al menos una selección.");
+ const action=$("mode").value,body={action,legs:legs.map(({sport_key,event_id,selection})=>({sport_key,event_id,selection}))};
+ if(action==="attach"){
+  if(!$("existingBet").value)return msg("Selecciona una apuesta existente.");
+  body.bet_id=$("existingBet").value;
+ }else{
+  body.stake=Number($("stake").value);
+  body.american_odds=Number($("odds").value);
+  body.sportsbook=$("sportsbook").value;
+  if(!Number.isFinite(body.stake)||body.stake<=0||!Number.isInteger(body.american_odds)||!(body.american_odds<=-100||body.american_odds>=100))return msg("Revisa stake y cuota.");
+ }
+ if(!confirm("¿Guardar "+legs.length+" selección(es) en HYDRAX? No se ejecuta ninguna apuesta en Caesars."))return;
+ $("saveBet").disabled=true;
+ try{
+  const data=await api(body);
+  legs=[];renderLegs();msg("Ticket conectado: "+data.legs+" selección(es). "+(data.auto_eligible?"Verificación automática disponible.":"Algunas selecciones requieren revisión manual."));
+  await Promise.all([loadUntracked(),loadBets()]);
+ }catch(e){msg("No se pudo registrar: "+e.message)}
+ finally{$("saveBet").disabled=false}
+};
+async function loadBets(){
+ const data=await api({action:"list"});const bets=data.bets||[];
+ $("won").textContent=String(bets.filter(b=>b.status==="won").length);
+ $("lost").textContent=String(bets.filter(b=>b.status==="lost").length);
+ $("pending").textContent=String(bets.filter(b=>b.status==="pending").length);
+ $("profit").textContent=money(bets.reduce((sum,b)=>sum+Number(b.net_profit||0),0));
+ const box=$("bets");box.replaceChildren();
+ if(!bets.length){box.textContent="Todavía no hay apuestas registradas.";return}
+ for(const b of bets){
+  const item=document.createElement("article");item.className="bet";
+  const row=document.createElement("div");row.className="row";
+  const title=document.createElement("strong");title.textContent=b.selection+" · "+money(b.stake);
+  const tag=document.createElement("span");tag.className="badge "+b.status;tag.textContent=labelStatus(b.status);
+  row.append(title,tag);item.append(row);
+  const sub=document.createElement("div");sub.className="muted tiny";
+  sub.textContent=b.sport+" · "+b.event_name+" · "+(b.american_odds>0?"+":"")+b.american_odds+" · profit "+money(b.net_profit);
+  item.append(sub);
+  if(!b.legs?.length){
+   const info=document.createElement("p");info.className="muted tiny";info.textContent="Sin evento exacto vinculado: selección manual pendiente. Usa Conectar apuesta pendiente existente.";item.append(info);
+  }
+  for(const l of b.legs||[]){
+   const e=document.createElement("div");e.className="leg";
+   const r=document.createElement("div");r.className="row";
+   const name=document.createElement("small");name.textContent=l.leg_index+". "+l.selection+" · "+l.event_name;
+   const status=document.createElement("span");status.className="badge "+l.status;status.textContent=labelStatus(l.status);
+   r.append(name,status);e.append(r);
+   const detail=document.createElement("div");detail.className="muted tiny";
+   detail.textContent=(l.reason?("Revisión: "+l.reason+". "):"")+(l.source_updated_at?("Fuente: "+l.source+" · "+new Date(l.source_updated_at).toLocaleString("es-PR")):(l.last_checked_at?"Comprobado: "+new Date(l.last_checked_at).toLocaleString("es-PR"):"Esperando partido"));
+   e.append(detail);item.append(e);
+  }
+  if(b.settlement_verified_at){const v=document.createElement("small");v.textContent="Liquidado por "+b.settlement_source+" · "+new Date(b.settlement_verified_at).toLocaleString("es-PR");item.append(v)}
+  box.append(item);
+ }
+}
+async function sync(){
+ if(loading)return;
+ loading=true;$("sync").disabled=true;
+ try{
+  const result=await api({action:"sync"});
+  lastRun=Date.now();
+  $("lastSync").textContent="Última comprobación: "+new Date().toLocaleString("es-PR")+" · "+result.checked+" eventos verificados · "+result.settled_bets+" tickets liquidados · "+result.review+" selecciones en revisión"+(result.errors?.length?" · Avisos: "+result.errors.join(" / "):"");
+  await loadBets();
+  if(result.settled_bets)msg("HYDRAX actualizó "+result.settled_bets+" apuesta(s) automáticamente.");
+ }catch(e){$("lastSync").textContent="No se pudo verificar: "+e.message}
+ finally{loading=false;$("sync").disabled=false}
+}
+$("sync").onclick=sync;
+async function loadAll(){
+ try{await Promise.all([loadCatalog(),loadUntracked(),loadBets()]);await sync()}
+ catch(e){msg("Error: "+e.message)}
+}
+const {data:{session:s}}=await sb.auth.getSession();session=s;await renderAuth();
+setInterval(()=>{if(session&&document.visibilityState==="visible"&&Date.now()-lastRun>10*60*1000)sync()},60*1000);
+document.addEventListener("visibilitychange",()=>{if(session&&document.visibilityState==="visible"&&Date.now()-lastRun>10*60*1000)sync()});
+</script></body></html>
