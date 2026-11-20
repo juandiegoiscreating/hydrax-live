@@ -6,6 +6,8 @@ on:
       - ".github/workflows/hydrax-quality.yml"
       - "scripts/hydrax-backtest.mjs"
       - "hydrax-quantum-final.html"
+      - "tracker.html"
+      - "supabase/functions/hydrax-public-intelligence/index.ts"
 permissions:
   contents: read
 jobs:
@@ -27,14 +29,39 @@ jobs:
           new Function(js);
           console.log("FRONTEND_SYNTAX_OK");
           JS
+      - name: Check tracker JavaScript syntax and bankroll controls
+        run: |
+          node - <<'JS'
+          const fs=require("fs");
+          const cp=require("child_process");
+          const html=fs.readFileSync("tracker.html","utf8");
+          const js=html.match(/<script type="module">([\s\S]*?)<\/script>/)?.[1];
+          if(!js)throw Error("Tracker module missing");
+          const check=cp.spawnSync(process.execPath,["--input-type=module","--check"],{input:js,encoding:"utf8"});
+          if(check.status!==0)throw Error(check.stderr||"Tracker JS syntax failed");
+          if(!html.includes('id="bankroll"')||!html.includes('id="unitSize"'))throw Error("Capital tracker missing");
+          if(!html.includes("DEFAULT_URL")||!html.includes("DEFAULT_KEY"))throw Error("Auto configuration missing");
+          console.log("TRACKER_SYNTAX_AND_CONTROLS_OK");
+          JS
       - name: Check model backtest script syntax
         run: node --check scripts/hydrax-backtest.mjs
+      - name: Check current quote freshness invariant
+        run: |
+          node - <<'JS'
+          const fs=require("fs");
+          const text=fs.readFileSync("supabase/functions/hydrax-public-intelligence/index.ts","utf8");
+          if(!text.includes("MODEL_CACHE_VERSION=12"))throw Error("Backend cache version mismatch");
+          if(!text.includes("function deliverSnapshot("))throw Error("Missing fresh quote validation");
+          if(!text.includes("now-quote<=30*60000"))throw Error("Missing 30 minute quote cutoff");
+          if(text.includes("Upgrade prior cached quotes"))throw Error("Unsafe legacy snapshot upgrade detected");
+          console.log("CACHE_SAFETY_CHECK_OK");
+          JS
       - name: Probe HYDRAX API read-only status
         run: |
           node --input-type=module - <<'JS'
           const r=await fetch("https://acpwxupqpbyesbhuixkq.supabase.co/functions/v1/hydrax-public-intelligence",{signal:AbortSignal.timeout(15000)});
           if(!r.ok)throw Error("HYDRAX API status "+r.status);
           const j=await r.json();
-          if(j.service!=="HYDRAX_PUBLIC_INTELLIGENCE" || j.authRequired!==false)throw Error("Unexpected API health shape");
+          if(j.service!=="HYDRAX_PUBLIC_INTELLIGENCE" || j.authRequired!==false || j.modelCacheVersion!==12 || j.marketFreshnessPolicyMinutes!==30)throw Error("Unexpected API health shape");
           console.log({service:j.service,modelVersion:j.modelVersion,modelAudit:j.modelAudit?.status});
           JS
