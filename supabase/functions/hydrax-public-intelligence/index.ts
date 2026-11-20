@@ -426,7 +426,29 @@ function deliverSnapshot(payload:any){
 
 Deno.serve(async(req:Request)=>{
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:cors});
- if(req.method==="GET")return output({ok:true,service:"HYDRAX_PUBLIC_INTELLIGENCE",authRequired:false,personalDataExposed:false,cacheTTLMinutes:120,refreshLimitPerSportPerDay:LIMIT_PER_SPORT_DAY,modelVersion:MODEL_VERSION,modelAudit:modelAudit(),modelCacheVersion:MODEL_CACHE_VERSION,marketFreshnessPolicyMinutes:30});
+ if(req.method==="GET"){
+   const health={ok:true,service:"HYDRAX_PUBLIC_INTELLIGENCE",authRequired:false,personalDataExposed:false,cacheTTLMinutes:120,refreshLimitPerSportPerDay:LIMIT_PER_SPORT_DAY,modelVersion:MODEL_VERSION,modelAudit:modelAudit(),modelCacheVersion:MODEL_CACHE_VERSION,marketFreshnessPolicyMinutes:30};
+   if(new URL(req.url).searchParams.get("selftest")==="1"){
+     const past=new Date(Date.now()-86400000).toISOString();
+     const future=new Date(Date.now()+3600000).toISOString();
+     const recent=new Date(Date.now()-5*60000).toISOString();
+     const old=new Date(Date.now()-40*60000).toISOString();
+     const completed={date:past,competitions:[{status:{type:{completed:true}},competitors:[{id:"teamA",score:"103"},{id:"teamB",score:"99"}]}]};
+     const historyResult=history([completed],"teamA");
+     const quoteResult=deliverSnapshot({ok:true,picks:[
+       {priceUpdatedAt:recent,startsAt:future,selection:"fresh"},
+       {priceUpdatedAt:old,startsAt:future,selection:"stale"},
+       {priceUpdatedAt:recent,startsAt:past,selection:"started"}]});
+     const checks={
+       espnCompetitionFinal:historyResult.length===1&&historyResult[0].margin===4,
+       losAngelesAlias:norm("LA Clippers")===norm("Los Angeles Clippers"),
+       staleQuotesFiltered:quoteResult.picks.length===1&&quoteResult.picks[0].selection==="fresh"&&quoteResult.staleOptionsRemoved===2,
+       unvalidatedSignal:modelAudit().status==="NOT_VALIDATED"};
+     const ok=Object.values(checks).every(Boolean);
+     return output({...health,selftest:checks,ok},ok?200:500);
+   }
+   return output(health);
+ }
  if(req.method!=="POST")return output({error:"METHOD_NOT_ALLOWED"},405);
  try{
    const input=await req.json();
