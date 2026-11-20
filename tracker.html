@@ -430,8 +430,22 @@ async function loadBets(reset=false){
         make("strong",bet.selection),
         make("small",`${bet.sport} | ${bet.event_name}`),
         make("p",`${money(bet.stake)} | ${bet.american_odds>0?"+":""}${bet.american_odds} | ${bet.status}`),
-        make("small","Profit: "+money(bet.net_profit))
+        make("small",bet.status==="pending"
+          ? "Retorno estimado según cuota redondeada: "+money(
+              Number(bet.stake)*(bet.american_odds>0?1+bet.american_odds/100:1+100/Math.abs(bet.american_odds))
+            )
+          : "Profit: "+money(bet.net_profit))
       );
+      if(bet.notes){
+        const details=document.createElement("details");
+        const label=make("summary","Ver detalles y notas del ticket");
+        label.style.cursor="pointer";
+        const note=make("p",bet.notes);
+        note.className="muted";
+        note.style.whiteSpace="pre-wrap";
+        details.append(label,note);
+        item.append(details);
+      }
       const actions=make("div","");
       actions.className="actions";
       if(bet.status==="pending"){
