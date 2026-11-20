@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050505"><title>HYDRAX | Importar Caesars</title>
+<style>
+:root{color-scheme:dark;--bg:#050505;--panel:#101010;--line:#393939;--muted:#bebebe;--text:#fff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#191919,#050505 50%);color:var(--text);font:15px system-ui,-apple-system,sans-serif}
+main{max-width:780px;padding:20px 16px 70px;margin:auto}
+a{color:#fff}h1{font-size:31px;margin:5px 0}h2{margin:0 0 12px;font-size:20px}
+small,.muted{color:var(--muted);line-height:1.55}.eyebrow{font-size:11px;font-weight:800;letter-spacing:.17em;color:#ddd}
+.card{background:linear-gradient(180deg,#151515,#090909);border:1px solid var(--line);border-radius:18px;padding:20px;margin:16px 0}
+label{display:block;margin:12px 0 6px;color:#ddd;font-size:13px}
+input,textarea,select,button{font:inherit;border-radius:10px}
+input,textarea,select{background:#090909;border:1px solid #4e4e4e;color:white;width:100%;padding:12px}
+textarea{min-height:110px;resize:vertical}
+button{background:#fff;color:#000;padding:13px 17px;font-weight:800;cursor:pointer;border:1px solid #fff}
+button.secondary{background:#181818;color:white;border:1px solid #555}
+button:disabled{opacity:.45;cursor:wait}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+#message{white-space:pre-wrap;min-height:20px}.hidden{display:none!important}
+#preview{display:block;width:100%;max-width:370px;max-height:500px;object-fit:contain;margin:12px 0;border:1px solid #555;border-radius:10px}
+.notice{border-left:2px solid white;padding:11px;background:#171717;font-size:13px;line-height:1.6}
+@media(max-width:540px){.grid{grid-template-columns:1fr}main{padding:14px}}
+</style></head><body><main>
+<div class="row"><div><div class="eyebrow">SPORTS INTELLIGENCE BY JD</div><h1>HYDRAX · CAESARS</h1><small>IMPORTACIÓN GRATUITA DE TICKETS</small></div><a href="./tracker.html">← Bet Tracker</a></div>
+<p id="message" aria-live="polite"></p>
+<section id="auth" class="card hidden"><h2>Inicia sesión en HYDRAX</h2><p class="muted">Usa la misma cuenta de tu Bet Tracker. Nunca escribas tu contraseña de Caesars aquí.</p>
+<div class="grid"><div><label>Email</label><input id="email" type="email" autocomplete="username"></div><div><label>Contraseña HYDRAX</label><input id="password" type="password" autocomplete="current-password"></div></div><button id="login" style="margin-top:15px">Entrar</button></section>
+<section id="app" class="hidden">
+<div class="card"><h2>Importar una apuesta</h2>
+<p class="muted">En Caesars, utiliza <b>Compartir apuesta</b> o guarda una captura de tu ticket. Súbela aquí: HYDRAX intentará reconocer importe, cuota y mercado. Revisa los campos antes de registrar.</p>
+<label for="imageFile">Captura PNG, JPG o WEBP</label><input id="imageFile" type="file" accept="image/png,image/jpeg,image/webp,image/*">
+<img id="preview" class="hidden" alt="Vista de tu ticket">
+<button id="scan" class="secondary">Leer captura automáticamente (OCR)</button>
+<p class="muted" id="scanState">El reconocimiento se realiza en tu dispositivo. Puede necesitar descargar el motor OCR gratuito.</p>
+<label for="rawText">Texto reconocido o copiado con Live Text del iPhone</label>
+<textarea id="rawText" placeholder="También puedes seleccionar texto en la imagen con Live Text y pegarlo aquí."></textarea>
+<button id="parse" class="secondary">Extraer datos del texto</button>
+</div>
+<div class="card">
+<h2>Revisa tu ticket</h2>
+<div class="grid"><div><label for="sport">Deporte</label><select id="sport">
+<option>MIXED</option><option>ATP</option><option>WTA</option><option>NBA</option><option>NFL</option><option>MLB</option><option>NCAAB</option><option>NCAAF</option><option>UFC</option></select></div>
+<div><label for="betType">Tipo</label><select id="betType"><option value="single">Individual</option><option value="parlay">Parlay</option></select></div></div>
+<label for="eventName">Evento / título del ticket</label><input id="eventName" maxlength="240" placeholder="Ej. Alcaraz vs Sinner">
+<label for="selection">Selección / picks</label><input id="selection" maxlength="240" placeholder="Ej. Alcaraz Moneyline o parlay de 3 selecciones">
+<div class="grid"><div><label for="stake">Cantidad apostada ($)</label><input id="stake" type="number" step="0.01" min="0.01"></div>
+<div><label for="odds">Cuota americana del ticket</label><input id="odds" type="number" step="1" placeholder="-110"></div></div>
+<div class="grid"><div><label for="ticket">ID de ticket (si aparece)</label><input id="ticket" maxlength="80" placeholder="Opcional"></div>
+<div><label for="result">Estado del ticket según Caesars</label><select id="result"><option value="pending">Pendiente</option><option value="won">Ganada</option><option value="lost">Perdida</option><option value="void">Anulada / void</option></select></div></div>
+<p class="notice">La lectura OCR puede equivocarse. Solo se guardará lo que tú confirmes. HYDRAX no accede a Caesars, no ejecuta apuestas y no cambia el dinero real de tu cuenta. Los tickets importados no quedan vinculados automáticamente a los eventos deportivos del monitor.</p>
+<button id="save" style="margin-top:13px;width:100%">Revisado: registrar en HYDRAX</button>
+</div>
+<div class="card"><h2>¿Tienes más de un ticket?</h2><p class="muted">Después de guardar uno, selecciona la siguiente captura y repite. HYDRAX intenta detectar reimportaciones por ID o huella de captura entre tus apuestas más recientes.</p>
+<a href="./auto-settlement.html">Conectar un ticket a resultados deportivos →</a></div>
+</section>
+</main>
+<script type="module">
+import {createClient} from "https://esm.sh/@supabase/supabase-js@2.57.0";
+const $=id=>document.getElementById(id);
+const url=localStorage.getItem("hydrax_url")||"https://acpwxupqpbyesbhuixkq.supabase.co";
+const key=localStorage.getItem("hydrax_key")||"sb_publishable_9MEM0vRtaqMMaTIewFH1NA_b4AG0OH7";
+const sb=createClient(url,key);
+let file=null,hash="",imageUrl=null,busy=false;
+const show=(id,yes)=>$(id).classList.toggle("hidden",!yes);
+const msg=s=>$("message").textContent=s;
+const clean=s=>String(s||"").trim();
+async function login(){
+ const {data,error}=await sb.auth.signInWithPassword({email:clean($("email").value),password:$("password").value});
+ if(error)return msg("Acceso: "+error.message);
+ await session();msg("Sesión HYDRAX iniciada.");
+}
+$("login").onclick=login;
+async function session(){
+ const {data:{session}}=await sb.auth.getSession();
+ show("auth",!session);show("app",!!session);
+}
+await session();
+async function fingerprint(content) {
+ const digest=await crypto.subtle.digest("SHA-256",content);
+ return [...new Uint8Array(digest)].map(n=>n.toString(16).padStart(2,"0")).join("");
+}
+$("imageFile").onchange=async()=>{
+ file=$("imageFile").files?.[0]||null;
+ hash="";
+ if(imageUrl)URL.revokeObjectURL(imageUrl);
+ if(!file){show("preview",false);return}
+ if(file.size>15*1024*1024){file=null;return msg("Imagen demasiado grande (máximo 15 MB).")}
+ if(!file.type.startsWith("image/")){file=null;return msg("Selecciona una imagen.")}
+ imageUrl=URL.createObjectURL(file);$("preview").src=imageUrl;show("preview",true);
+ hash=await fingerprint(await file.arrayBuffer());
+ $("rawText").value="";$("scanState").textContent="Imagen lista para lectura.";msg("");
+};
+function loadTesseract(){
+ if(window.Tesseract)return Promise.resolve(window.Tesseract);
+ return new Promise((resolve,reject)=>{
+  const script=document.createElement("script");
+  script.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
+  script.onload=()=>window.Tesseract?resolve(window.Tesseract):reject(Error("Motor OCR no disponible"));
+  script.onerror=()=>reject(Error("Sin acceso al motor OCR. Pega texto con Live Text."));
+  document.head.append(script);
+ });
+}
+$("scan").onclick=async()=>{
+ if(!file)return msg("Primero selecciona la captura de Caesars.");
+ $("scan").disabled=true;
+ $("scanState").textContent="Leyendo la captura en este dispositivo…";
+ try{
+  const t=await loadTesseract();
+  const result=await t.recognize(file,"eng");
+  const raw=result.data?.text||"";
+  if(!raw.trim())throw Error("No se pudo reconocer texto. Prueba con una imagen más clara.");
+  $("rawText").value=raw;
+  readTicket();
+  $("scanState").textContent="Lectura terminada. Revisa todos los datos antes de guardar.";
+ }catch(e){$("scanState").textContent="OCR no disponible; utiliza Live Text del iPhone.";msg(String(e.message||e))}
+ finally{$("scan").disabled=false}
+};
+function amount(s){
+ const n=Number(s.replace(/,/g,""));
+ return Number.isFinite(n)&&n>0&&n<=100000000?n:null;
+}
+function readTicket(){
+ const raw=$("rawText").value,flat=raw.replace(/\s+/g," ");
+ if(!raw.trim())return msg("No hay texto para analizar.");
+ const lower=flat.toLowerCase();
+ if(/\bparlay\b|\bsame.game.parlay\b|\bsgp\b/i.test(raw))$("betType").value="parlay";
+ const sportMap=[["NBA",/\bnba\b/i],["NFL",/\bnfl\b/i],["MLB",/\bmlb\b/i],["NCAAB",/\bncaab\b|\bncaa (?:men|basketball)\b/i],["NCAAF",/\bncaaf\b|\bncaa football\b/i],["UFC",/\bufc\b|\bmma\b/i],["ATP",/\batp\b/i],["WTA",/\bwta\b/i]];
+ const sports=sportMap.filter(([_,re])=>re.test(raw));
+ if(sports.length===1)$("sport").value=sports[0][0];
+ else if(sports.length>1)$("sport").value="MIXED";
+ const priceRegex=/(?:total\s+(?:bet\s+)?odds|total\s+price|bet\s+odds|odds)\s*[:=]?\s*([+\-−]\s*\d{3,5})/i;
+ const oddsMatch=flat.match(priceRegex)||flat.match(/(?:^|[\s(])([+\-−]\s*\d{3,5})(?=\s|$|[)])/);
+ if(oddsMatch){const value=parseInt(oddsMatch[1].replace(/[−\s]/g,c=>c==="−"?"-":""),10);if(Number.isInteger(value)&&(value>=100||value<=-100))$("odds").value=String(value)}
+ const stakeMatch=flat.match(/(?:total\s+(?:wager|stake)|stake|wager\s+amount|amount\s+wagered|risk(?:ed)?|bet\s+amount)\s*[:=]?\s*\$?\s*(\d{1,7}(?:,\d{3})*(?:\.\d{1,2})?)/i);
+ if(stakeMatch){const s=amount(stakeMatch[1]);if(s!==null)$("stake").value=String(s)}
+ const ticketMatch=flat.match(/(?:ticket|receipt|confirmation|bet\s*id)\s*(?:number|no\.?|id|#|:)?\s*[:#]?\s*([A-Z0-9-]{7,40})/i);
+ if(ticketMatch)$("ticket").value=ticketMatch[1];
+ const lines=raw.split(/\r?\n/).map(clean).filter(x=>x.length>3);
+ const eventLine=lines.find(x=>/(?:\bvs\.?\b|\bv\b|\s@\s)/i.test(x)&&x.length<=160);
+ if(eventLine)$("eventName").value=eventLine.slice(0,240);
+ const selectionLine=lines.find(x=>/moneyline|money line|match winner|to win/i.test(x)&&x.length<=170);
+ if(selectionLine)$("selection").value=selectionLine.slice(0,240);
+ else if($("betType").value==="parlay")$("selection").placeholder="Escribe las selecciones del parlay antes de guardar";
+ if(/\bwon\b|\bwinner\b|\bganada\b/i.test(lower)&&!/\bpossible\b/i.test(lower))$("result").value="won";
+ else if(/\blost\b|\bperdida\b/i.test(lower))$("result").value="lost";
+ else if(/\bvoid\b|\brefunded\b|\bcancelled\b|\bpush\b/i.test(lower))$("result").value="void";
+ msg("Datos extraídos. Completa y comprueba los campos; el OCR no confirma que sean correctos.");
+}
+$("parse").onclick=readTicket;
+async function call(body) {
+ const {data,error}=await sb.functions.invoke("hydrax-bet-tracker",{body});
+ if(error){let message=error.message;if(error.context instanceof Response){try{const j=await error.context.json();message=j.error||message}catch{}}throw Error(message)}
+ if(data?.error)throw Error(data.error);
+ return data;
+}
+async function alreadyRegistered(signature,ticket) {
+ if(!signature&&!ticket)return false;
+ for(let offset=0;offset<=200;offset+=100){
+  const data=await call({action:"list",limit:100,offset});
+  const bets=data?.bets||[];
+  for(const b of bets){
+   const note=String(b.notes||"");
+   if(signature&&note.includes("SOURCE_SHA256="+signature))return true;
+   if(ticket&&note.includes("CAESARS_TICKET_ID="+ticket))return true;
+  }
+  if(bets.length<100)break;
+ }
+ return false;
+}
+$("save").onclick=async()=>{
+ if(busy)return;
+ const stake=Number($("stake").value),odds=Number($("odds").value);
+ const event=clean($("eventName").value),selection=clean($("selection").value);
+ const ticket=clean($("ticket").value);
+ if(!event||!selection)return msg("Completa evento y selección; no inventaremos datos.");
+ if(!Number.isFinite(stake)||stake<=0||Math.abs(Math.round(stake*100)-stake*100)>1e-6)return msg("Cantidad apostada inválida.");
+ if(!Number.isInteger(odds)||!(odds<=-100||odds>=100)||Math.abs(odds)>100000)return msg("Cuota americana inválida.");
+ if(!hash&&clean($("rawText").value)){
+  hash=await fingerprint(new TextEncoder().encode(clean($("rawText").value)));
+ }
+ if(!hash&&!ticket)return msg("Carga una captura o pega el texto del ticket para identificar su origen.");
+ if(!confirm("¿Registrar esta apuesta en HYDRAX, con los datos revisados? No la colocará en Caesars."))return;
+ busy=true;$("save").disabled=true;
+ try{
+  if(await alreadyRegistered(hash,ticket)){msg("Ese ticket parece estar registrado. No se creó un duplicado.");return}
+  const note=["SOURCE=CAESARS_USER_IMPORT",hash?"SOURCE_SHA256="+hash:"",ticket?"CAESARS_TICKET_ID="+ticket:"","REVIEWED_BY_USER=YES","NO_DIRECT_BOOKSYNC=YES"].filter(Boolean).join("\n");
+  const data=await call({action:"create",sport:$("sport").value,event_name:event,selection,market:"custom",sportsbook:"Caesars",
+   bet_type:$("betType").value,stake,american_odds:odds,notes:note});
+  const status=$("result").value;
+  if(status!=="pending"){
+   try{await call({action:"settle",id:data.bet.id,status})}
+   catch(e){msg("Apuesta registrada, pero no se pudo actualizar el resultado. Entra al Bet Tracker: "+String(e.message||e));return}
+  }
+  msg("Apuesta importada correctamente y guardada en HYDRAX. Puedes importar otra captura.");
+  $("imageFile").value="";$("rawText").value="";file=null;hash="";if(imageUrl)URL.revokeObjectURL(imageUrl);
+  $("preview").removeAttribute("src");show("preview",false);
+  $("ticket").value="";$("eventName").value="";$("selection").value="";$("stake").value="";$("odds").value="";
+  $("result").value="pending";
+ }catch(e){msg("No se pudo guardar: "+String(e.message||e))}
+ finally{busy=false;$("save").disabled=false}
+};
+</script></body></html>
