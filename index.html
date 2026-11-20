@@ -1,72 +1,205 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>HYDRAX - Sports Intelligence by JD</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#050505">
+<meta name="description" content="HYDRAX Sports Intelligence by JD: Intelligence, Bet Tracker, resultados e importación Caesars en un solo terminal.">
+<title>HYDRAX — Sports Intelligence by JD</title>
 <style>
-:root{--bg:#050505;--panel:#0c0c0c;--panel2:#111;--text:#f7f7f7;--muted:#b9b9b9;--line:#2c2c2c;--neon:#ffffff;--glow:0 0 10px rgba(255,255,255,.18),0 0 24px rgba(255,255,255,.08);}
-*{box-sizing:border-box} html,body{margin:0;background:radial-gradient(circle at top,#1a1a1a 0,#050505 42%,#000 100%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
-a{color:inherit} main{max-width:980px;margin:auto;padding:22px 16px 56px} .nav{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap} .brand small{display:block;color:#d0d0d0;letter-spacing:.22em;font-size:11px;font-weight:700} .brand h1{margin:6px 0 4px;font-size:38px;letter-spacing:.03em} .brand h1 span{color:#fff;text-shadow:var(--glow)} .sub{color:var(--muted);line-height:1.55} .card{background:linear-gradient(180deg,#0f0f0f,#080808);border:1px solid var(--line);border-radius:24px;padding:22px;box-shadow:0 20px 40px rgba(0,0,0,.28)} .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:18px} .menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px} .tile{display:block;text-decoration:none;padding:20px;border-radius:20px;background:linear-gradient(180deg,#111,#090909);border:1px solid #353535;min-height:170px} .tile:hover{border-color:#fff;box-shadow:var(--glow)} .pill{display:inline-block;border:1px solid #4d4d4d;border-radius:999px;padding:6px 12px;font-size:12px;color:#e6e6e6} h2{margin:0 0 10px;font-size:22px} .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px} .btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 18px;border-radius:14px;text-decoration:none;border:1px solid #fff;background:#fff;color:#000;font-weight:800} .btn.secondary{background:#101010;color:#fff;border-color:#3a3a3a} .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px} ul{padding-left:18px} .footer{text-align:center;color:#8d8d8d;font-size:13px;margin-top:20px} @media(max-width:820px){.hero,.grid2,.menu{grid-template-columns:1fr} .brand h1{font-size:31px}}
+:root{color-scheme:dark;--bg:#050505;--card:#101010;--edge:#343434;--ink:#f8f8f8;--dim:#b7b7b7;--glow:0 0 24px #ffffff18}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}body{margin:0;min-height:100vh;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:radial-gradient(ellipse at top,#242424 0,#090909 32%,#020202 78%);overflow-x:hidden}
+button,a{font:inherit}button{cursor:pointer}a{color:inherit}
+.shell{max-width:1180px;margin:0 auto;padding:20px 18px 54px}
+header{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:6px 0 22px}
+.eyebrow{font-size:10px;font-weight:800;letter-spacing:.24em;color:#d6d6d6}
+.brand{font-size:clamp(25px,4vw,38px);font-weight:900;letter-spacing:.035em;margin:4px 0 2px}.brand span{font-size:.46em;font-weight:650;vertical-align:middle;text-shadow:0 0 15px #fff8;letter-spacing:0}
+.lead{font-size:13px;color:var(--dim);margin:6px 0 0;line-height:1.5}
+.live{font-size:11px;border:1px solid #4c4c4c;border-radius:40px;padding:9px 13px;letter-spacing:.1em;color:#dfdfdf;white-space:nowrap}
+.topnav{display:flex;gap:7px;overflow-x:auto;padding:5px 2px 13px;scrollbar-width:thin;scrollbar-color:#444 transparent}
+.tab{flex:0 0 auto;border:1px solid #383838;background:#101010;color:#eaeaea;border-radius:13px;padding:12px 16px;font-size:13px;font-weight:750;white-space:nowrap;transition:border-color .15s,background .15s}
+.tab:hover,.subtab:hover{border-color:#f0f0f0}.tab.active,.subtab.active{background:#fff;color:#050505;border-color:#fff;box-shadow:var(--glow)}
+.subnav{display:none;gap:7px;overflow-x:auto;padding:5px 1px 15px;scrollbar-width:thin;scrollbar-color:#444 transparent}
+.subnav.active{display:flex}
+.subtab{flex:0 0 auto;padding:9px 12px;border:1px solid #393939;border-radius:11px;font-size:12px;font-weight:750;background:#0b0b0b;color:#ddd}
+.panel{background:linear-gradient(180deg,#121212,#090909);border:1px solid #323232;border-radius:24px;box-shadow:0 20px 45px #0007}
+.overview{padding:clamp(21px,4vw,36px);margin-top:4px}
+.badge{display:inline-block;border-radius:50px;border:1px solid #555;color:#d3d3d3;font-size:11px;padding:6px 11px;letter-spacing:.1em;font-weight:700}
+h1{font-size:clamp(28px,5vw,48px);letter-spacing:-.04em;max-width:800px;line-height:1.13;margin:18px 0 12px}
+h2{font-size:20px;margin:0 0 9px}.muted{color:var(--dim);line-height:1.6}
+.deck{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:26px}
+.quick{border-radius:18px;text-align:left;border:1px solid #414141;background:linear-gradient(160deg,#1a1a1a,#080808);color:#fff;padding:19px;min-height:152px}
+.quick:hover{border-color:#fff;box-shadow:var(--glow)}
+.quick .kicker{display:block;font-size:11px;letter-spacing:.12em;color:#c5c5c5;margin-bottom:12px;font-weight:800}
+.quick .name{display:block;font-size:21px;font-weight:850;margin-bottom:7px}
+.quick .note{display:block;font-size:13px;color:#bdbdbd;line-height:1.5}
+.viewer{display:none;margin-top:4px;overflow:hidden;padding:12px 14px 0}
+.viewer.active{display:block}
+.viewerhead{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;border-bottom:1px solid #2c2c2c;padding:9px 6px 14px}
+.viewerhead h2{font-size:20px;margin:0}
+.viewerhead p{margin:5px 0 0;font-size:12px;color:#bdbdbd}
+.openoriginal{color:#e5e5e5;text-decoration:none;font-size:12px;border:1px solid #555;border-radius:10px;padding:10px 12px}
+.openoriginal:hover{border-color:#fff}
+.module{display:none;position:relative;margin:0;padding:0;width:100%}
+.module.active{display:block}
+.module iframe{display:block;width:100%;height:760px;border:0;background:transparent;overflow:hidden}
+.loading{padding:22px;font-size:13px;color:#bbb}
+.footer{font-size:12px;color:#999;text-align:center;margin:26px 0 0;line-height:1.7}
+:focus-visible{outline:2px solid #fff;outline-offset:3px}
+@media(max-width:660px){.shell{padding:13px 10px 40px}header{padding:9px 5px 14px}.live{font-size:10px}.tab{padding:11px 13px}.overview{padding:20px 15px}.deck{grid-template-columns:1fr;gap:10px}.quick{min-height:126px;padding:16px}.viewer{padding:10px 6px 0;border-radius:17px}.viewerhead{padding:5px 10px 13px}h1{letter-spacing:-.025em}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
 </head>
 <body>
-<main>
-  <section class="nav">
-    <div class="brand">
-      <small>SPORTS INTELLIGENCE TERMINAL</small>
-      <h1>HYDRAX <span>by JD</span></h1>
-      <div class="sub">Black edition · white neon · research-driven workflow</div>
-    </div>
-    <span class="pill">PERSONAL OPS PANEL</span>
-  </section>
-
-  <section class="hero">
-    <div class="card">
-      <span class="pill">HOME</span>
-      <h2 style="margin-top:14px">HYDRAX – Sports Intelligence by JD</h2>
-      <p class="sub">Tu terminal central. Desde aquí entras al motor de intelligence o al registro de apuestas. El análisis público no requiere contraseña. El tracker sigue siendo tu espacio privado para registrar picks, stake, ganancia posible y resultado.</p>
-      <div class="actions">
-        <a class="btn" href="./hydrax-quantum-final.html">Open Intelligence</a>
-        <a class="btn secondary" href="./tracker.html">Open Bet Tracker</a>
-        <a class="btn secondary" href="./auto-settlement.html">Auto Settlement · Resultados</a>
-        <a class="btn secondary" href="./import-caesars.html">Importar tickets Caesars · Gratis</a>
-      </div>
-    </div>
-    <div class="card">
-      <span class="pill">ESTRUCTURA</span>
-      <div class="grid2" style="grid-template-columns:1fr;margin-top:14px">
-        <div>
-          <h2>Intelligence</h2>
-          <ul class="sub">
-            <li>Submenús por deporte</li>
-            <li>Independent model + market comparison</li>
-            <li>Monte Carlo y EV teórico</li>
-            <li>Botón de mejores bets del día</li>
-          </ul>
-        </div>
-        <div>
-          <h2>Bet Tracker</h2>
-          <ul class="sub">
-            <li>Registro manual de apuestas</li>
-            <li>Stake, odds, status y notas</li>
-            <li>Historial y resumen</li>
-            <li>Tracking por deporte</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="card" style="margin-top:18px">
-    <span class="pill">RUTA RÁPIDA</span>
-    <div class="menu" style="margin-top:14px">
-      <a class="tile" href="./hydrax-quantum-final.html"><span class="pill">INTELLIGENCE</span><h2 style="margin-top:16px">Generate Top Plays (-400 mínimo)</h2><p class="sub">Escáner diario por UFC, ATP, WTA, NBA, NFL, MLB, NCAAB y NCAAF.</p></a>
-      <a class="tile" href="./auto-settlement.html"><span class="pill">AUTO-SETTLEMENT</span><h2 style="margin-top:16px">Resultados automáticos</h2><p class="sub">Moneylines y parlays con resultados verificados por evento. Registro, validación y profit automático.</p></a>
-      <a class="tile" href="./tracker.html"><span class="pill">TRACKER</span><h2 style="margin-top:16px">Registro de Apuestas</h2><p class="sub">Aquí está el registro de apuestas. Ese es el módulo donde guardas tus picks reales.</p></a>
-    </div>
-  </section>
-
-  <div class="footer">HYDRAX • Sports Intelligence by JD</div>
-</main>
-</body></html>
+<div class="shell">
+<header>
+  <div><div class="eyebrow">SPORTS INTELLIGENCE TERMINAL</div><div class="brand">HYDRAX <span>— Sports Intelligence by JD</span></div><p class="lead">Un terminal · análisis deportivo · registro de apuestas · resultados</p></div>
+  <span class="live">JD / UNIFIED TERMINAL</span>
+</header>
+<nav class="topnav" aria-label="Menú principal">
+  <button class="tab" type="button" data-route="inicio">⌂ Inicio</button>
+  <button class="tab" type="button" data-route="intelligence">◈ Intelligence</button>
+  <button class="tab" type="button" data-route="tracker">▤ Bet Tracker</button>
+  <button class="tab" type="button" data-route="resultados">✓ Resultados</button>
+  <button class="tab" type="button" data-route="caesars">↥ Importar Caesars</button>
+</nav>
+<nav id="subIntelligence" class="subnav" aria-label="Intelligence por deporte">
+  <button class="subtab" data-route="intelligence/ufc">🥊 UFC</button>
+  <button class="subtab" data-route="intelligence/atp">🎾 ATP</button>
+  <button class="subtab" data-route="intelligence/wta">🎾 WTA</button>
+  <button class="subtab" data-route="intelligence/nba">🏀 NBA</button>
+  <button class="subtab" data-route="intelligence/nfl">🏈 NFL</button>
+  <button class="subtab" data-route="intelligence/mlb">⚾ MLB</button>
+  <button class="subtab" data-route="intelligence/ncaab">🏀 NCAAB</button>
+  <button class="subtab" data-route="intelligence/ncaaf">🏈 NCAAF</button>
+</nav>
+<nav id="subTracker" class="subnav" aria-label="Submenús del Bet Tracker">
+  <button class="subtab" data-route="tracker/performance">Performance</button>
+  <button class="subtab" data-route="tracker/capital">Bankroll</button>
+  <button class="subtab" data-route="tracker/registrar">Registrar apuesta</button>
+  <button class="subtab" data-route="tracker/jarvis">JARVIS</button>
+  <button class="subtab" data-route="tracker/historial">Historial</button>
+</nav>
+<section id="home" class="panel overview">
+  <span class="badge">HYDRAX CONTROL CENTER</span>
+  <h1>Todo HYDRAX, en una sola plataforma.</h1>
+  <p class="muted">Cambia de análisis a apuestas sin salir del terminal. Tus registros existentes siguen en el Bet Tracker conectado a Supabase; este panel no crea cuentas nuevas ni borra el historial.</p>
+  <div class="deck">
+    <button type="button" class="quick" data-route="intelligence/ufc"><span class="kicker">01 · INTELLIGENCE</span><span class="name">Analizar encuentros</span><span class="note">UFC, ATP, WTA, NBA, NFL, MLB, NCAAB y NCAAF. Cuotas y probabilidades disponibles.</span></button>
+    <button type="button" class="quick" data-route="tracker/performance"><span class="kicker">02 · BET TRACKER</span><span class="name">Mis apuestas</span><span class="note">ROI, yield, balance, registro manual, historial y asistente JARVIS.</span></button>
+    <button type="button" class="quick" data-route="resultados"><span class="kicker">03 · AUTO SETTLEMENT</span><span class="name">Verificar resultados</span><span class="note">Revisión y liquidación cuando los tickets están vinculados a eventos verificables.</span></button>
+    <button type="button" class="quick" data-route="caesars"><span class="kicker">04 · CAESARS</span><span class="name">Importar un ticket</span><span class="note">Importación gratuita con revisión antes de guardar; sin acceso directo a tu cuenta Caesars.</span></button>
+  </div>
+</section>
+<section id="viewer" class="panel viewer" aria-label="Aplicación HYDRAX integrada">
+  <div class="viewerhead">
+    <div><h2 id="viewTitle">Módulo</h2><p id="viewSubtitle"></p></div>
+    <a class="openoriginal" id="openOriginal" href="./tracker.html" target="_blank" rel="noopener">Abrir módulo en otra pestaña</a>
+  </div>
+  <div class="module" id="mod-intelligence" data-module="intelligence"><p class="loading">Cargando Intelligence…</p></div>
+  <div class="module" id="mod-tracker" data-module="tracker"><p class="loading">Cargando Bet Tracker…</p></div>
+  <div class="module" id="mod-resultados" data-module="resultados"><p class="loading">Cargando Resultados…</p></div>
+  <div class="module" id="mod-caesars" data-module="caesars"><p class="loading">Cargando importador de Caesars…</p></div>
+</section>
+<footer class="footer">HYDRAX — Sports Intelligence by JD · Investigación experimental, no garantía de beneficio.<br>HYDRAX registra apuestas; nunca coloca apuestas automáticamente en Caesars.</footer>
+</div>
+<script>
+(function(){
+"use strict";
+var PAGES={
+ intelligence:{src:"./hydrax-quantum-final.html",title:"HYDRAX Intelligence",subtitle:"Elige un deporte y genera tu análisis."},
+ tracker:{src:"./tracker.html",title:"Bet Tracker & Capital",subtitle:"Seguimiento de apuestas, bankroll, JARVIS y rendimiento."},
+ resultados:{src:"./auto-settlement.html",title:"Auto Settlement",subtitle:"Resultados finales y liquidación de tickets compatibles."},
+ caesars:{src:"./import-caesars.html",title:"Importar tickets Caesars",subtitle:"Importación guiada sin conexión a tu cuenta Caesars."}
+};
+var files={"index.html":"inicio","hydrax-quantum-final.html":"intelligence","tracker.html":"tracker","auto-settlement.html":"resultados","import-caesars.html":"caesars"};
+var current="inicio", currentSub="", frames={};
+var activeObserve={};
+function route(){var bits=decodeURIComponent(location.hash.replace(/^#/,"")).toLowerCase().split("/");var view=bits[0];return {view:view==="inicio"||PAGES[view]?view:"inicio",sub:(bits[1]||"").replace(/[^a-z0-9-]/g,"")};}
+function navigate(value){var h="#"+value;if(location.hash===h){render();return;}location.hash=h;}
+document.addEventListener("click",function(e){var b=e.target.closest("[data-route]");if(b){e.preventDefault();navigate(b.getAttribute("data-route"));}});
+function loadFrame(view){
+ if(frames[view])return frames[view];
+ var host=document.getElementById("mod-"+view);
+ var frame=document.createElement("iframe");frame.title=PAGES[view].title;frame.src=PAGES[view].src;frame.setAttribute("scrolling","no");frame.setAttribute("loading","eager");frame.referrerPolicy="strict-origin-when-cross-origin";
+ frame.addEventListener("load",function(){enhance(view,frame);resize(view);if(current===view)applySub(view,currentSub);});
+ host.replaceChildren(frame);frames[view]=frame;return frame;
+}
+function resize(view){
+ var frame=frames[view];if(!frame||current!==view)return;
+ try{var d=frame.contentDocument;var h=Math.max(d.documentElement.scrollHeight,d.body.scrollHeight,d.documentElement.offsetHeight,d.body.offsetHeight);if(Number.isFinite(h)&&h>0){var px=Math.max(580,Math.ceil(h)+15)+"px";if(frame.style.height!==px)frame.style.height=px;}}catch(e){}
+}
+function enhance(view,frame){
+ try{
+  var d=frame.contentDocument;if(!d||!d.body)return;
+  var style=d.createElement("style");style.id="hydrax-unified-style";
+  style.textContent="html,body{background:transparent!important;overflow-x:hidden!important}main{max-width:100%!important;padding:5px 0 38px!important;margin:0 auto!important}"+
+   (view==="intelligence"?".header{display:none!important}":view==="tracker"?"header{display:none!important}":view==="resultados"?"header{display:none!important}":"");
+  d.head.appendChild(style);
+  d.addEventListener("click",function(e){
+   var a=e.target.closest("a[href]");if(!a||a.target==="_blank"||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;
+   var url;try{url=new URL(a.getAttribute("href"),d.location.href);}catch(err){return;}
+   if(url.origin!==window.location.origin)return;
+   var name=url.pathname.split("/").pop()||"index.html";var dest=files[name];if(!dest)return;
+   e.preventDefault();navigate(dest);
+  },true);
+  var schedule=function(){if(!activeObserve[view])return;cancelAnimationFrame(activeObserve[view]);activeObserve[view]=requestAnimationFrame(function(){resize(view);});};
+  if(window.ResizeObserver){new ResizeObserver(schedule).observe(d.body);}
+  new MutationObserver(schedule).observe(d.body,{subtree:true,childList:true,attributes:true,characterData:true});
+  d.addEventListener("input",schedule);
+  if(d.fonts&&d.fonts.ready)d.fonts.ready.then(schedule).catch(function(){});
+  setTimeout(schedule,200);setTimeout(schedule,1000);
+ }catch(e){/* Existing modules remain accessible through standalone links. */}
+}
+function scrollTarget(frame,element){
+ if(!element)return;
+ try{
+  var parent=element;
+  while(parent&&parent!==frame.contentDocument.body){if(parent.classList&&parent.classList.contains("hidden")){element=frame.contentDocument.querySelector("#auth")||element;break;}parent=parent.parentElement;}
+  var top=window.scrollY+frame.getBoundingClientRect().top+element.getBoundingClientRect().top-110;
+  window.scrollTo({top:Math.max(0,top),behavior:"smooth"});
+ }catch(e){}
+}
+function applySub(view,sub){
+ var frame=frames[view];if(!frame)return;
+ var d;try{d=frame.contentDocument;if(!d||!d.body)return;}catch(e){return;}
+ if(view==="intelligence"){
+  var sport=(sub||"ufc").toUpperCase();
+  var b=Array.from(d.querySelectorAll("#sports .sportbtn")).find(function(n){return n.textContent.trim().toUpperCase().endsWith(sport);});
+  if(b&&!b.classList.contains("active"))b.click();
+  if(sub){setTimeout(function(){scrollTarget(frame,d.getElementById("sports-panel"));},120);}
+ }
+ if(view==="tracker"&&sub){
+  var targets={performance:"filter",capital:"capitalSeed",registrar:"register",jarvis:"jarvisText",historial:"bets"};
+  var id=targets[sub];if(!id)return;
+  var e=d.getElementById(id);if(!e)return;
+  var panel=e.closest(".card")||e;
+  setTimeout(function(){scrollTarget(frame,panel);},230);
+ }
+}
+function render(){
+ var r=route();current=r.view;currentSub=r.sub;
+ document.querySelectorAll(".tab").forEach(function(n){n.classList.toggle("active",n.dataset.route===current);n.setAttribute("aria-pressed",n.dataset.route===current?"true":"false");});
+ document.querySelectorAll(".subtab").forEach(function(n){var path=n.dataset.route;var selected=(current+"/"+currentSub===path);n.classList.toggle("active",selected);n.setAttribute("aria-pressed",selected?"true":"false");});
+ document.getElementById("subIntelligence").classList.toggle("active",current==="intelligence");
+ document.getElementById("subTracker").classList.toggle("active",current==="tracker");
+ document.getElementById("home").style.display=current==="inicio"?"block":"none";
+ document.getElementById("viewer").classList.toggle("active",current!=="inicio");
+ Object.keys(PAGES).forEach(function(view){document.getElementById("mod-"+view).classList.toggle("active",view===current);});
+ if(current==="inicio"){document.title="HYDRAX — Sports Intelligence by JD";return;}
+ var info=PAGES[current];
+ document.getElementById("viewTitle").textContent=info.title;
+ document.getElementById("viewSubtitle").textContent=info.subtitle;
+ var link=document.getElementById("openOriginal");link.href=info.src;
+ document.title=info.title+" | HYDRAX by JD";
+ var frame=loadFrame(current);requestAnimationFrame(function(){resize(current);applySub(current,currentSub);});
+}
+window.addEventListener("hashchange",render);
+window.addEventListener("resize",function(){if(current!=="inicio")resize(current);});
+window.addEventListener("pageshow",function(){if(current!=="inicio")resize(current);});
+render();
+})();
+</script>
+</body>
+</html>
