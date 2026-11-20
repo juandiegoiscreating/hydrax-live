@@ -140,18 +140,27 @@ Nunca uses service_role ni secret keys.
 <h2>Capital de seguimiento</h2>
 <p class="muted">Capital teórico para seguimiento; no equivale a fondos confirmados de Caesars. Los valores se guardan en este navegador.</p>
 <div class="grid">
-<div><label for="capitalSeed">Capital inicial ($)</label><input id="capitalSeed" type="number" min="0" step=".01" value="400"></div>
+<div><label for="capitalSeed">Capital inicial ($)</label><input id="capitalSeed" type="number" min="0" step=".01" value="0"></div>
 <div><label for="unitSize">Unidad de seguimiento ($)</label><input id="unitSize" type="number" min=".01" step=".01" value="25"></div>
 </div>
-<button class="secondary" id="saveCapital">Guardar parámetros</button>
+<button class="secondary" id="saveCapital">Guardar parámetros</button><button class="secondary" id="resetBalance">Reiniciar balance a $0 · conservar historial</button>
 <div class="stats" style="margin-top:16px">
-<div class="metric"><small>Capital libre estimado</small><strong id="bankroll">$400.00</strong></div>
+<div class="metric"><small>Capital libre estimado</small><strong id="bankroll">$0.00</strong></div>
 <div class="metric"><small>Stakes pendientes</small><strong id="lockedCapital">$0.00</strong></div>
 <div class="metric"><small>Exposición / capital inicial</small><strong id="exposure">0.00%</strong></div>
 <div class="metric"><small>Unidad configurada</small><strong id="unitReadout">$25.00</strong></div>
 </div>
 </section>
 
+<section class="card">
+<h2>JARVIS · Consultas por voz</h2>
+<p class="muted">Consulta bankroll, ganancias, apuestas pendientes y unidades. JARVIS no registra apuestas.</p>
+<button id="jarvisListen">🎙 Hablar con JARVIS</button>
+<button class="secondary" id="jarvisMute">🔊 Voz activada</button>
+<input id="jarvisText" placeholder="JARVIS, ¿cuál es mi bankroll?">
+<button class="secondary" id="jarvisAsk">Consultar</button>
+<p id="jarvisReply" aria-live="polite" class="muted">Sistema listo.</p>
+</section>
 <section class="card">
 <h2>Registrar apuesta</h2>
 <label>Deporte</label>
@@ -214,13 +223,13 @@ const $=id=>document.getElementById(id);
 let trackerSummary=null;
 const capitalValue=(key,fallback)=>{const raw=localStorage.getItem(key);if(raw===null)return fallback;const v=Number(raw);return Number.isFinite(v)&&v>=0?v:fallback};
 function paintCapital(){
- const principal=capitalValue("hydrax_seed_capital",400);
+ const principal=capitalValue("hydrax_seed_capital",0);
  const unit=capitalValue("hydrax_unit_size",25)||25;
  $("capitalSeed").value=principal;
  $("unitSize").value=unit;
  const s=trackerSummary||{};
  const locked=Math.max(0,Number(s.total_staked||0)-Number(s.settled_staked||0));
- const free=principal+Number(s.net_profit||0)-locked;
+ const free=principal+Number(s.net_profit||0)-locked-Number(localStorage.getItem("hydrax_balance_baseline")||0);
  $("bankroll").textContent=money(free);
  $("lockedCapital").textContent=money(locked);
  $("exposure").textContent=principal>0?(100*locked/principal).toFixed(2)+"%":"—";
@@ -236,6 +245,47 @@ $("saveCapital").onclick=()=>{
  localStorage.setItem("hydrax_unit_size",String(unit));
  paintCapital();msg("Parámetros de seguimiento guardados en este dispositivo.");
 };
+
+$("resetBalance").onclick=()=>{
+ if(!confirm("¿Reiniciar balance a $0 conservando historial? Solo afecta este navegador."))return;
+ const x=trackerSummary||{};
+ const locked=Math.max(0,Number(x.total_staked||0)-Number(x.settled_staked||0));
+ localStorage.setItem("hydrax_seed_capital","0");
+ localStorage.setItem("hydrax_unit_size","25");
+ localStorage.setItem("hydrax_balance_baseline",String(Number(x.net_profit||0)-locked));
+ paintCapital();
+ msg("Balance reiniciado a $0. Historial conservado.");
+};
+let jarvisMuted=false;
+function jarvisAnswer(q){
+ q=String(q||"").toLowerCase();
+ const x=trackerSummary||{};
+ let answer=/bankroll|balance|capital|saldo/.test(q)?"Balance libre estimado: "+$("bankroll").textContent:
+ /pendiente|exposici|riesgo/.test(q)?"Stakes pendientes: "+$("lockedCapital").textContent+". Exposición: "+$("exposure").textContent:
+ /ganancia|perdida|pérdida|profit|estad/.test(q)?"Profit histórico: "+money(x.net_profit||0)+". Ganadas: "+(x.won||0)+". Perdidas: "+(x.lost||0):
+ /unidad|stake/.test(q)?"Unidad de seguimiento: "+$("unitReadout").textContent:
+ "Puedes consultarme bankroll, ganancias, pendientes, exposición y unidades.";
+ $("jarvisReply").textContent=answer;
+ if(!jarvisMuted&&window.speechSynthesis){
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(answer);u.lang="es-ES";u.rate=.92;u.pitch=.8;
+  const v=speechSynthesis.getVoices().find(v=>v.lang.startsWith("es")&&/male|hombre|jorge|diego/i.test(v.name))||speechSynthesis.getVoices().find(v=>v.lang.startsWith("es"));
+  if(v)u.voice=v;speechSynthesis.speak(u);
+ }
+}
+$("jarvisAsk").onclick=()=>jarvisAnswer($("jarvisText").value);
+$("jarvisText").addEventListener("keydown",e=>{if(e.key==="Enter")jarvisAnswer(e.target.value)});
+$("jarvisMute").onclick=()=>{jarvisMuted=!jarvisMuted;$("jarvisMute").textContent=jarvisMuted?"🔇 Voz desactivada":"🔊 Voz activada";if(jarvisMuted)speechSynthesis.cancel()};
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+$("jarvisListen").onclick=()=>{
+ if(!SpeechRecognition){$("jarvisReply").textContent="Este navegador no admite reconocimiento de voz. Usa la consulta escrita.";return;}
+ const rec=new SpeechRecognition();rec.lang="es-PR";rec.interimResults=false;
+ $("jarvisReply").textContent="Escuchando...";
+ rec.onresult=e=>{const q=e.results[0][0].transcript;$("jarvisText").value=q;jarvisAnswer(q)};
+ rec.onerror=e=>$("jarvisReply").textContent="Micrófono: "+e.error+". Prueba escribiendo.";
+ rec.start();
+};
+
 let sb=null;
 let offset=0;
 const pageSize=30;
