@@ -7,8 +7,15 @@ Personal sports research terminal with black and neon-white theme. **No automati
 - Intelligence: https://juandiegoiscreating.github.io/hydrax-live/hydrax-quantum-final.html
 - Bet Tracker: https://juandiegoiscreating.github.io/hydrax-live/tracker.html
 - Auto Settlement: https://juandiegoiscreating.github.io/hydrax-live/auto-settlement.html
+- Free Caesars screenshot importer: https://juandiegoiscreating.github.io/hydrax-live/import-caesars.html
 
 Intelligence is passwordless; Supabase secrets stay server-side. The bet registry is authenticated and user-specific.
+
+## Caesars import options (2026-11-20)
+- Direct automatic sportsbook account-to-HYDRAX sync is **not enabled**; SharpSports live betSync is paid, and Pikkit's free BookSync only syncs within Pikkit (its export feature is Pro).
+- `import-caesars.html` is a free, user-initiated iPhone-friendly screenshot importer with locally running Tesseract OCR (CDN downloaded on demand). The screenshot is not uploaded to HYDRAX by the importer; reviewed text fields are sent to the existing authenticated bet tracker.
+- Supports single tickets and parlays as summary records, with optional user-confirmed manual settlement and best-effort import deduplication over recent account records. It does **not** supply precise event-leg IDs to Auto Settlement.
+- The uploader requires the user to share/save their Caesars ticket after placement; it **does not** continuously import from their Caesars account.
 
 ## Auto Settlement v1 (2026-11-20)
 - New authenticated page: auto-settlement.html; original Bet Tracker checks results on opening and every 10 minutes while visible.
