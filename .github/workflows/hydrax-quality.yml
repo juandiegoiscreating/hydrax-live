@@ -65,3 +65,29 @@ jobs:
           if(j.service!=="HYDRAX_PUBLIC_INTELLIGENCE" || j.authRequired!==false || j.modelCacheVersion!==12 || j.marketFreshnessPolicyMinutes!==30)throw Error("Unexpected API health shape");
           console.log({service:j.service,modelVersion:j.modelVersion,modelAudit:j.modelAudit?.status});
           JS
+
+      - name: Live NBA research smoke (never places wagers)
+        run: |
+          node --input-type=module - <<'JS'
+          const url="https://acpwxupqpbyesbhuixkq.supabase.co/functions/v1/hydrax-public-intelligence";
+          const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({sport:"NBA"}),signal:AbortSignal.timeout(65000)});
+          const data=await r.json();
+          if(r.status===429 && data.error==="DAILY_SOURCE_LIMIT"){
+            console.log("NBA_RESEARCH_QUOTA_REACHED: live provider test deferred; GET health passed");
+            process.exit(0);
+          }
+          if(!r.ok||data.ok!==true||data.sport!=="NBA"||!Array.isArray(data.picks)){
+            throw Error("HYDRAX_NBA_SMOKE_FAILED: HTTP "+r.status+" "+JSON.stringify(data).slice(0,700));
+          }
+          if(data.modelCacheVersion!==12)throw Error("Incorrect cache version");
+          const now=Date.now();
+          for(const p of data.picks){
+            const stamp=Date.parse(p.priceUpdatedAt||"");
+            const start=Date.parse(p.startsAt||"");
+            if(!Number.isFinite(stamp)||stamp>now+120000||now-stamp>30*60000||!Number.isFinite(start)||start<=now||p.odds<-400){
+              throw Error("Expired or outside-policy pick returned");
+            }
+          }
+          console.log("NBA_LIVE_SMOKE_OK",{events:data.eventsCount,picks:data.picks.length,fromCache:data.fromCache});
+          JS
