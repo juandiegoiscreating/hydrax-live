@@ -220,6 +220,12 @@ import {createClient} from
 const DEFAULT_URL="https://acpwxupqpbyesbhuixkq.supabase.co";
 const DEFAULT_KEY="sb_publishable_9MEM0vRtaqMMaTIewFH1NA_b4AG0OH7";
 const $=id=>document.getElementById(id);
+if(localStorage.getItem("hydrax_accounting_version")!=="fresh-2026-11-20"){
+ localStorage.setItem("hydrax_seed_capital","0");
+ localStorage.setItem("hydrax_unit_size","25");
+ localStorage.setItem("hydrax_balance_baseline","0");
+ localStorage.setItem("hydrax_accounting_version","fresh-2026-11-20");
+}
 let trackerSummary=null;
 const capitalValue=(key,fallback)=>{const raw=localStorage.getItem(key);if(raw===null)return fallback;const v=Number(raw);return Number.isFinite(v)&&v>=0?v:fallback};
 function paintCapital(){
