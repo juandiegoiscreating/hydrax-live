@@ -75,9 +75,9 @@ function rankBetOptions(events:any[],sport:string){
  return result.sort((a,b)=>b.rankingScore-a.rankingScore || b.evPercent-a.evPercent).slice(0,5).map((v:any,i:number)=>({...v,rank:i+1}));
 }
 
-const MODEL_VERSION="HYDRAX_INDEPENDENT_FORM_V1";
+const MODEL_VERSION="HYDRAX_INDEPENDENT_FORM_V2";
 const ESPN:Record<string,string>={NBA:"basketball/nba",NCAAB:"basketball/mens-college-basketball",NFL:"football/nfl",NCAAF:"football/college-football",MLB:"baseball/mlb"};
-function norm(s:string){return String(s||"").toLowerCase().replace(/&/g," and ").replace(/[^a-z0-9 ]/g," ").replace(/\b(university|college|the|of|at)\b/g," ").replace(/\s+/g," ").trim()}
+function norm(s:string){return String(s||"").toLowerCase().replace(/\bl\.?a\.?\b/g,"los angeles").replace(/&/g," and ").replace(/[^a-z0-9 ]/g," ").replace(/\b(university|college|the|of|at)\b/g," ").replace(/\s+/g," ").trim()}
 function similar(a:string,b:string){
  const x=norm(a),y=norm(b);if(x===y)return 1;
  const tx=x.split(" ").filter(w=>w.length>1),ty=y.split(" ").filter(w=>w.length>1);
@@ -130,10 +130,12 @@ function history(events:any[],teamId:string){
  const result:{margin:number,date:number}[]=[];
  for(const event of events){
    const c=event?.competitions?.[0];
-   if(!c || event?.status?.type?.completed!==true)continue;
+   const done=event?.status?.type?.completed===true||c?.status?.type?.completed===true
+     ||event?.status?.type?.name==="STATUS_FINAL"||c?.status?.type?.name==="STATUS_FINAL";
+   if(!c||!done)continue;
    const team=c.competitors?.find((x:any)=>String(x.id||x.team?.id)===teamId);
    const opp=c.competitors?.find((x:any)=>String(x.id||x.team?.id)!==teamId);
-   if(!team||!opp)continue;
+   if(!team||!opp||team.score==null||opp.score==null)continue;
    const a=Number(typeof team.score==="object"?team.score?.value:team.score);
    const b=Number(typeof opp.score==="object"?opp.score?.value:opp.score);
    const date=Date.parse(event.date);
@@ -324,7 +326,7 @@ function modelAudit(){
 const SR=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
 const TABLE=PROJECT+"/rest/v1/hydrax_market_cache";
 const TTL_MS=2*60*60*1000;
-const MODEL_CACHE_VERSION=12;
+const MODEL_CACHE_VERSION=13;
 const LIMIT_PER_SPORT_DAY=4;
 const cors={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"content-type","Access-Control-Allow-Methods":"GET,POST,OPTIONS","Cache-Control":"no-store"};
 const output=(body:unknown,status=200)=>Response.json(body,{status,headers:cors});
