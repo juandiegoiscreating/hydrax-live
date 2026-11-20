@@ -50,9 +50,10 @@ jobs:
           node - <<'JS'
           const fs=require("fs");
           const text=fs.readFileSync("supabase/functions/hydrax-public-intelligence/index.ts","utf8");
-          if(!text.includes("MODEL_CACHE_VERSION=12"))throw Error("Backend cache version mismatch");
+          if(!text.includes("MODEL_CACHE_VERSION=13"))throw Error("Backend cache version mismatch");
           if(!text.includes("function deliverSnapshot("))throw Error("Missing fresh quote validation");
           if(!text.includes("now-quote<=30*60000"))throw Error("Missing 30 minute quote cutoff");
+          if(!text.includes("c?.status?.type?.completed===true"))throw Error("Missing final-status fallback");
           if(text.includes("Upgrade prior cached quotes"))throw Error("Unsafe legacy snapshot upgrade detected");
           console.log("CACHE_SAFETY_CHECK_OK");
           JS
@@ -62,7 +63,7 @@ jobs:
           const r=await fetch("https://acpwxupqpbyesbhuixkq.supabase.co/functions/v1/hydrax-public-intelligence",{signal:AbortSignal.timeout(15000)});
           if(!r.ok)throw Error("HYDRAX API status "+r.status);
           const j=await r.json();
-          if(j.service!=="HYDRAX_PUBLIC_INTELLIGENCE" || j.authRequired!==false || j.modelCacheVersion!==12 || j.marketFreshnessPolicyMinutes!==30)throw Error("Unexpected API health shape");
+          if(j.service!=="HYDRAX_PUBLIC_INTELLIGENCE" || j.authRequired!==false || j.modelCacheVersion!==13 || j.marketFreshnessPolicyMinutes!==30)throw Error("Unexpected API health shape");
           console.log({service:j.service,modelVersion:j.modelVersion,modelAudit:j.modelAudit?.status});
           JS
 
@@ -80,7 +81,7 @@ jobs:
           if(!r.ok||data.ok!==true||data.sport!=="NBA"||!Array.isArray(data.picks)){
             throw Error("HYDRAX_NBA_SMOKE_FAILED: HTTP "+r.status+" "+JSON.stringify(data).slice(0,700));
           }
-          if(data.modelCacheVersion!==12)throw Error("Incorrect cache version");
+          if(data.modelCacheVersion!==13)throw Error("Incorrect cache version");
           const now=Date.now();
           for(const p of data.picks){
             const stamp=Date.parse(p.priceUpdatedAt||"");
@@ -109,7 +110,7 @@ jobs:
                 continue;
               }
               if(!r.ok||d.ok!==true||d.sport!==sport||!Array.isArray(d.picks))throw Error("HTTP "+r.status+" "+JSON.stringify(d).slice(0,500));
-              if(d.modelCacheVersion!==12)throw Error("Incorrect model cache version");
+              if(d.modelCacheVersion!==13)throw Error("Incorrect model cache version");
               const now=Date.now();
               for(const p of d.picks){
                 const quote=Date.parse(p.priceUpdatedAt||"");
