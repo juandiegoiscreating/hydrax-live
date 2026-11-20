@@ -324,7 +324,7 @@ function modelAudit(){
 const SR=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
 const TABLE=PROJECT+"/rest/v1/hydrax_market_cache";
 const TTL_MS=2*60*60*1000;
-const MODEL_CACHE_VERSION=11;
+const MODEL_CACHE_VERSION=12;
 const LIMIT_PER_SPORT_DAY=4;
 const cors={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"content-type","Access-Control-Allow-Methods":"GET,POST,OPTIONS","Cache-Control":"no-store"};
 const output=(body:unknown,status=200)=>Response.json(body,{status,headers:cors});
@@ -400,9 +400,31 @@ async function generate(sport:string){
   warning:failures.join("; ")||"Selecciones para evaluación manual, con probabilidades experimentales. Sin garantías de ganancias ni validación de lesiones, alineaciones o calibración."};
 }
 
+
+/** A cached market snapshot is never proof that a current price can be obtained. */
+function deliverSnapshot(payload:any){
+ const now=Date.now(),today=todayPR(new Date(now).toISOString());
+ const original=Array.isArray(payload?.picks)?payload.picks:[];
+ const picks=original.filter((pick:any)=>{
+   const quote=Date.parse(String(pick?.priceUpdatedAt||""));
+   const start=Date.parse(String(pick?.startsAt||""));
+   return Number.isFinite(quote)&&quote<=now+120000&&now-quote<=30*60000
+     &&Number.isFinite(start)&&start>now
+     &&todayPR(new Date(start).toISOString())===today;
+ }).map((pick:any,i:number)=>({...pick,rank:i+1}));
+ const staleOptionsRemoved=original.length-picks.length;
+ const warnings=[payload?.warning,
+   staleOptionsRemoved?"HYDRAX ocultó "+staleOptionsRemoved+" selección(es) con cuotas de más de 30 minutos, fecha inválida o evento ya iniciado.":""].filter(Boolean);
+ return {...payload,picks,marketQuotesCheckedAt:new Date(now).toISOString(),
+   staleOptionsRemoved,marketFreshnessPolicyMinutes:30,
+   warning:warnings.join("; "),
+   message:staleOptionsRemoved&&picks.length===0?
+     "No quedan selecciones con cuotas recientes verificables. Consulta otro deporte o reintenta más tarde.":payload?.message};
+}
+
 Deno.serve(async(req:Request)=>{
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:cors});
- if(req.method==="GET")return output({ok:true,service:"HYDRAX_PUBLIC_INTELLIGENCE",authRequired:false,personalDataExposed:false,cacheTTLMinutes:120,refreshLimitPerSportPerDay:LIMIT_PER_SPORT_DAY,modelVersion:MODEL_VERSION,modelAudit:modelAudit()});
+ if(req.method==="GET")return output({ok:true,service:"HYDRAX_PUBLIC_INTELLIGENCE",authRequired:false,personalDataExposed:false,cacheTTLMinutes:120,refreshLimitPerSportPerDay:LIMIT_PER_SPORT_DAY,modelVersion:MODEL_VERSION,modelAudit:modelAudit(),modelCacheVersion:MODEL_CACHE_VERSION,marketFreshnessPolicyMinutes:30});
  if(req.method!=="POST")return output({error:"METHOD_NOT_ALLOWED"},405);
  try{
    const input=await req.json();
@@ -417,49 +439,11 @@ Deno.serve(async(req:Request)=>{
    const sameDay=existing?.quota_date===day;
    const age=existing?.updated_at?Date.now()-Date.parse(existing.updated_at):Number.POSITIVE_INFINITY;
    if(hasPayload&&(age<TTL_MS || (sameDay&&existing.refresh_count>=LIMIT_PER_SPORT_DAY))){
-     return output({...payload,fromCache:true,cacheUpdatedAt:existing.updated_at,warning:[payload.warning,age>=TTL_MS?"Límite diario de refrescos alcanzado; precios pueden estar desactualizados":""].filter(Boolean).join("; ")});
+     const checked=deliverSnapshot(payload);return output({...checked,fromCache:true,cacheUpdatedAt:existing.updated_at,warning:[checked.warning,age>=TTL_MS?"Límite diario de refrescos alcanzado; cuotas antiguas ocultas":""] .filter(Boolean).join("; ")});
    }
 
 
-   // Upgrade prior cached quotes to ranked options without pretending that snapshots establish full cross-book consensus.
-   if(payload?.ok===true && Number(payload.modelCacheVersion)>=3 && Number(payload.modelCacheVersion)<MODEL_CACHE_VERSION
-     && Array.isArray(payload.events)){
-      const legacy=payload.events.slice(0,5);
-      const cachedOptions:any[]=[];
-      for(const game of legacy){
-       const offers=Array.isArray(game.bestPrices)?game.bestPrices.filter((o:any)=>valid(o.odds)&&o.odds>=-400):[];
-       if(!offers.length)continue;
-       const candidate=offers.map((o:any)=>{
-        const p=implied(o.odds);
-        const profit=rnd(25*(decimal(o.odds)-1));
-        const risk=(1-p)*100;
-        const score=rnd(3.5*Math.log2(1+profit/25)+10*p-(risk>=90?15:risk>=75?10:risk>=50?5:0));
-        return {sport,event:game.event,eventId:game.id||null,selection:o.team,bookmaker:o.bookmaker||"Bookmaker",
-          odds:o.odds,probabilityPercent:null,simulatedPercent:null,evPercent:null,
-          possibleProfit25:profit,possibleReturn25:rnd(25+profit),lossProbabilityPercent:null,
-          risk:"NO CALCULADO - PRECIOS HISTORICOS EN CACHE",dataQuality:"LEGACY_CACHE_NO_CONSENSUS",
-          priceUpdatedAt:o.updatedAt||null,peerBookmakerCount:game.recentBookmakerCount||null,
-          startsAt:game.startsAt,rankingScore:score,validatedValue:false,execution:"MANUAL_ONLY",
-          evidence:"LEGACY_CACHED_PRICE_NO_VERIFIED_PROBABILITY"};
-       }).sort((a:any,b:any)=>b.rankingScore-a.rankingScore)[0];
-       if(candidate)cachedOptions.push(candidate);
-      }
-      cachedOptions.sort((a:any,b:any)=>b.rankingScore-a.rankingScore);
-      const [events,picks,availability]=await Promise.all([
-       enrichPreviewBatch(legacy,sport),
-       attachIndependent(cachedOptions.slice(0,5),sport),
-       availabilityReport(sport)
-      ]);
-      const refreshed={...payload,events,picks:picks.map((x:any,i:number)=>({...x,rank:i+1,rankedOption:true})),
-       modelCacheVersion:MODEL_CACHE_VERSION,predictionType:"RANKED_MARKET_RESEARCH",
-       candidateCriteria:{minAmericanOdds:-400,maxAmericanOdds:null,perSportLimit:5,positiveEVNotRequired:true,validated:false,execution:"MANUAL_ONLY"},
-       modelValidation:modelAudit(),playerAvailability:availability,
-       message:cachedOptions.length?"Selecciones de precios guardados. Datos antiguos: comprueba la cuota antes de apostar.":"Sin cuotas utilizables en el snapshot previo.",
-       warning:"Cotizaciones históricas en caché; no se calculó consenso ni EV y pueden haber cambiado."};
-      const n=sameDay?Number(existing.refresh_count||0):0;
-      await store(sport,refreshed,n,day);
-      return output({...refreshed,fromCache:true,cacheUpdatedAt:new Date().toISOString()});
-   }
+   // Never upgrade historical quote snapshots into current ranked plays.
    const count=sameDay?Number(existing.refresh_count||0):0;
    if(count>=LIMIT_PER_SPORT_DAY)return output({ok:false,error:"DAILY_SOURCE_LIMIT",message:"Se agotó el límite diario de consultas gratuitas."},429);
    // Reserve a daily quota slot before calling the provider.
@@ -467,9 +451,9 @@ Deno.serve(async(req:Request)=>{
    try{
      const data=await generate(sport);
      await store(sport,data,count+1,day);
-     return output({...data,fromCache:false});
+     return output({...deliverSnapshot(data),fromCache:false});
    }catch(e){
-     if(hasPayload)return output({...payload,fromCache:true,warning:"Proveedor temporalmente no disponible; respuesta anterior. "+(e instanceof Error?e.message:"Error")});
+     if(hasPayload)return output({...deliverSnapshot(payload),fromCache:true,warning:"Proveedor temporalmente no disponible; cotizaciones caducadas ocultas. "+(e instanceof Error?e.message:"Error")});
      return output({error:"DATA_SOURCE_FAILED",detail:e instanceof Error?e.message:String(e)},502);
    }
  }catch(e){return output({error:"HYDRAX_PUBLIC_ERROR",detail:e instanceof Error?e.message:String(e)},500)}
