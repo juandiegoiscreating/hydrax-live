@@ -144,7 +144,7 @@ function enhance(view,frame){
    var name=url.pathname.split("/").pop()||"index.html";var dest=files[name];if(!dest)return;
    e.preventDefault();navigate(dest);
   },true);
-  var schedule=function(){if(!activeObserve[view])return;cancelAnimationFrame(activeObserve[view]);activeObserve[view]=requestAnimationFrame(function(){resize(view);});};
+  var schedule=function(){if(current!==view)return;cancelAnimationFrame(activeObserve[view]);activeObserve[view]=requestAnimationFrame(function(){resize(view);});};
   if(window.ResizeObserver){new ResizeObserver(schedule).observe(d.body);}
   new MutationObserver(schedule).observe(d.body,{subtree:true,childList:true,attributes:true,characterData:true});
   d.addEventListener("input",schedule);
