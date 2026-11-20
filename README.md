@@ -6,8 +6,18 @@ Personal sports research terminal with black and neon-white theme. **No automati
 - Home: https://juandiegoiscreating.github.io/hydrax-live/
 - Intelligence: https://juandiegoiscreating.github.io/hydrax-live/hydrax-quantum-final.html
 - Bet Tracker: https://juandiegoiscreating.github.io/hydrax-live/tracker.html
+- Auto Settlement: https://juandiegoiscreating.github.io/hydrax-live/auto-settlement.html
 
 Intelligence is passwordless; Supabase secrets stay server-side. The bet registry is authenticated and user-specific.
+
+## Auto Settlement v1 (2026-11-20)
+- New authenticated page: auto-settlement.html; original Bet Tracker checks results on opening and every 10 minutes while visible.
+- Supabase Edge Function: hydrax-auto-settlement (server-side The Odds API key and service role; no client secrets). Background Postgres cron every 2 hours, with an authorization token held in Vault.
+- Create or link **pending** bets using The Odds API event IDs. Individual and parlay legs are stored separately; automatic win/loss requires a verified complete event and numeric score. Only moneyline (h2h) is supported in v1.
+- NBA, NFL, MLB, NCAAB, NCAAF and a subset of tennis tournaments support automated scores when the provider has them. MMA and tennis tournaments with no score support require manual review; do not guess.
+- A parlay loses when any leg loses; wins only when all legs win. Draws, nonnumeric or mismatched scores and results older than The Odds API's 3-day window remain unconfirmed for manual review. Sportsbook-specific settlement rules may differ.
+- Existing tickets without individual linked events remain pending. **No automatic bets are placed**. Existing browser capital settings, including a user-set $0 starting balance, are left unchanged.
+- Production smoke: provider availability GET = HTTP 200; scheduled service job = HTTP 200; invalid user/job tokens = HTTP 401/403; deterministic win/loss/pending/review logic = HTTP 200. End-to-end live-ticket settlement remains untested until a real tracked final score exists.
 
 ## Release status — HYDRAX v13 (2026-11-19)
 - **Backend:** Supabase Edge Function deployment revision 14, model cache schema v13, with current-market quote validation before returning any ranked selections. Snapshots are never silently promoted to fresh picks.
@@ -44,7 +54,10 @@ Injuries and starting lineups remain unverified; a provider response is not a ve
 ## Code map
 - index.html: home.
 - hydrax-quantum-final.html: research UI.
-- tracker.html: authenticated bet ledger; keep its existing RLS.
+- tracker.html: authenticated bet ledger; checks results on open, keep its existing RLS.
+- auto-settlement.html: event-linked moneyline bet creation, parlay leg tracking, results and review UI.
+- auto-sync.js: original Bet Tracker status refresh.
+- supabase/functions/hydrax-auto-settlement/index.ts: verified result matching and status writes.
 - supabase/functions/hydrax-public-intelligence/index.ts: server logic.
 - scripts/hydrax-backtest.mjs: retrospective evaluation script.
 - .github/workflows/hydrax-quality.yml: frontend syntax and public API smoke.
