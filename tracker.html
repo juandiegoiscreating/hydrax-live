@@ -506,9 +506,15 @@ async function loadBets(reset=false){
         make("small",`${bet.sport} | ${bet.event_name}`),
         make("p",`${money(bet.stake)} | ${bet.american_odds>0?"+":""}${bet.american_odds} | ${bet.status}`),
         make("small",bet.status==="pending"
-          ? "Retorno estimado según cuota redondeada: "+money(
-              Number(bet.stake)*(bet.american_odds>0?1+bet.american_odds/100:1+100/Math.abs(bet.american_odds))
-            )
+          ? (()=>{ 
+              const found=String(bet.notes||"").match(/Official total payout \$([\\d,]+(?:\\.\\d{1,2})?)/i);
+              const official=found?Number(found[1].replaceAll(",","")):NaN;
+              return Number.isFinite(official)
+                ? "Pago potencial oficial del ticket: "+money(official)
+                : "Retorno estimado según cuota redondeada: "+money(
+                    Number(bet.stake)*(bet.american_odds>0?1+bet.american_odds/100:1+100/Math.abs(bet.american_odds))
+                  );
+            })()
           : "Profit: "+money(bet.net_profit))
       );
       if(bet.notes){
