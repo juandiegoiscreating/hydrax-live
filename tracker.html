@@ -229,7 +229,7 @@ import {createClient} from
 const DEFAULT_URL="https://acpwxupqpbyesbhuixkq.supabase.co";
 const DEFAULT_KEY="sb_publishable_9MEM0vRtaqMMaTIewFH1NA_b4AG0OH7";
 const $=id=>document.getElementById(id);
-if(localStorage.getItem("hydrax_accounting_version")!=="fresh-2026-11-20"){
+if(!localStorage.getItem("hydrax_accounting_version")){
  localStorage.setItem("hydrax_seed_capital","0");
  localStorage.setItem("hydrax_unit_size","25");
  localStorage.setItem("hydrax_balance_baseline","0");
@@ -349,6 +349,16 @@ async function renderSession(session){
   show("auth",!session);
   show("app",!!session);
   if(session){
+    // One-time, account-scoped reset after the Nov 23, 2026 HYDRAX ledger restart.
+    // The new Caesars parlay was paid outside the tracker; treat its $143.70 stake
+    // as already committed so available cash begins at $0, without a negative balance.
+    if(session.user.id==="f12e2ddf-91b2-44c8-ab28-4b7b7f575d8f" &&
+       localStorage.getItem("hydrax_accounting_version")!=="reset-2026-11-23"){
+      localStorage.setItem("hydrax_seed_capital","0");
+      localStorage.setItem("hydrax_unit_size","25");
+      localStorage.setItem("hydrax_balance_baseline","-143.70");
+      localStorage.setItem("hydrax_accounting_version","reset-2026-11-23");
+    }
     $("account").textContent=session.user.email||"Usuario";
     await refresh();
   }
