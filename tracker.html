@@ -507,8 +507,8 @@ async function loadBets(reset=false){
         make("p",`${money(bet.stake)} | ${bet.american_odds>0?"+":""}${bet.american_odds} | ${bet.status}`),
         make("small",bet.status==="pending"
           ? (()=>{ 
-              const found=String(bet.notes||"").match(/Official total payout \$([\\d,]+(?:\\.\\d{1,2})?)/i);
-              const official=found?Number(found[1].replaceAll(",","")):NaN;
+              const amountText=String(bet.notes||"").split("Official total payout $")[1]?.split(";")[0];
+              const official=amountText?Number(amountText.replace(/[^0-9.]/g,"")):NaN;
               return Number.isFinite(official)
                 ? "Pago potencial oficial del ticket: "+money(official)
                 : "Retorno estimado según cuota redondeada: "+money(
